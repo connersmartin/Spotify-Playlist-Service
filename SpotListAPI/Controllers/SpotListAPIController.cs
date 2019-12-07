@@ -23,35 +23,35 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Playlist")]
-        public Dictionary<string,string> GetPlaylists([FromBody] JsonElement request)
+        public JsonResult GetPlaylists([FromBody] JsonElement request)
         {
             var x = request;
             //return id of playlist and playlist name/length
-            return new Dictionary<string, string>();
+            return new JsonResult("");
         }
 
         [HttpGet]
         [Route("Tracks")]
-        public Dictionary<string, string> GetPlaylistTracks([FromBody] JsonElement request)
+        public JsonResult GetPlaylistTracks([FromBody] JsonElement request)
         {
             //return song title/artist and time
-            return new Dictionary<string, string>();
+            return new JsonResult("");
         }
 
         [HttpPost]
         [Route("Create")]
-        public string CreatePlaylist([FromBody] JsonElement request)
+        public JsonResult CreatePlaylist([FromBody] JsonElement request)
         {
             //return playlist link
-            return "";
+            return new JsonResult("");
         }
 
         [HttpPut]
         [Route("Edit")]
-        public string UpdatePlaylist([FromBody] JsonElement request)
+        public JsonResult UpdatePlaylist([FromBody] JsonElement request)
         {
             //return successful edit title
-            return "";
+            return new JsonResult("");
         }
     }
 }
