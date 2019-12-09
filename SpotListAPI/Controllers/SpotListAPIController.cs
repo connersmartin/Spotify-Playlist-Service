@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using SpotListAPI.Services;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.IO;
 
 namespace SpotListAPI.Controllers
 {
@@ -24,8 +26,9 @@ namespace SpotListAPI.Controllers
         [HttpGet]
         [Route("Playlist")]
         public JsonResult GetPlaylists([FromBody] JsonElement request)
-        {
-            var x = request;
+        {            
+            var auth = HttpContext.Request.Headers["auth"];                   
+            
             //return id of playlist and playlist name/length
             return new JsonResult("");
         }
@@ -34,6 +37,7 @@ namespace SpotListAPI.Controllers
         [Route("Tracks")]
         public JsonResult GetPlaylistTracks([FromBody] JsonElement request)
         {
+            var auth = HttpContext.Request.Headers["auth"];
             //return song title/artist and time
             return new JsonResult("");
         }
@@ -42,6 +46,7 @@ namespace SpotListAPI.Controllers
         [Route("Create")]
         public JsonResult CreatePlaylist([FromBody] JsonElement request)
         {
+            var auth = HttpContext.Request.Headers["auth"];
             //return playlist link
             return new JsonResult("");
         }
@@ -50,8 +55,9 @@ namespace SpotListAPI.Controllers
         [Route("Edit")]
         public JsonResult UpdatePlaylist([FromBody] JsonElement request)
         {
+            var auth = HttpContext.Request.Headers["auth"];
             //return successful edit title
             return new JsonResult("");
-        }
+        }       
     }
 }
