@@ -8,6 +8,7 @@ using SpotListAPI.Services;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
+using SpotListAPI.Models;
 
 namespace SpotListAPI.Controllers
 {
@@ -25,7 +26,7 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Playlist")]
-        public JsonResult GetPlaylists([FromBody] JsonElement request)
+        public JsonResult GetPlaylists([FromBody] GetPlaylistRequest request)
         {            
             var auth = HttpContext.Request.Headers["auth"];                   
             
@@ -35,7 +36,7 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Tracks")]
-        public JsonResult GetPlaylistTracks([FromBody] JsonElement request)
+        public JsonResult GetPlaylistTracks([FromBody] GetPlaylistTracks request)
         {
             var auth = HttpContext.Request.Headers["auth"];
             //return song title/artist and time
@@ -44,8 +45,8 @@ namespace SpotListAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public JsonResult CreatePlaylist([FromBody] JsonElement request)
-        {
+        public JsonResult CreatePlaylist([FromBody] PlaylistRequest request)
+        {          
             var auth = HttpContext.Request.Headers["auth"];
             //return playlist link
             return new JsonResult("");
@@ -53,7 +54,7 @@ namespace SpotListAPI.Controllers
 
         [HttpPut]
         [Route("Edit")]
-        public JsonResult UpdatePlaylist([FromBody] JsonElement request)
+        public JsonResult UpdatePlaylist([FromBody] PlaylistRequest request)
         {
             var auth = HttpContext.Request.Headers["auth"];
             //return successful edit title
