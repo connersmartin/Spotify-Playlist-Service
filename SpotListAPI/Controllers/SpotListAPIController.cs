@@ -18,10 +18,12 @@ namespace SpotListAPI.Controllers
     {
 
         private readonly ILogger<SpotListAPIController> _logger;
+        private readonly PlaylistService _playlistService;
 
-        public SpotListAPIController(ILogger<SpotListAPIController> logger)
+        public SpotListAPIController(ILogger<SpotListAPIController> logger, PlaylistService playlistService)
         {
             _logger = logger;
+            _playlistService = playlistService;
         }
 
         [HttpGet]
@@ -47,9 +49,11 @@ namespace SpotListAPI.Controllers
         [Route("Create")]
         public JsonResult CreatePlaylist([FromBody] PlaylistRequest request)
         {          
-            var auth = HttpContext.Request.Headers["auth"];
+            request.Auth = HttpContext.Request.Headers["auth"];
+            var playList = _playlistService.CreatePlaylist(request);
             //return playlist link
-            return new JsonResult("");
+            var interim = JsonSerializer.Serialize(playList);
+            return new JsonResult(interim);
         }
 
         [HttpPut]
