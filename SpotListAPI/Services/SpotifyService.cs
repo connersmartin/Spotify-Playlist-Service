@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.Net.Http;
 using System.Net;
+using System.Net.Http.Headers;
 
 namespace SpotListAPI.Services
 {
@@ -12,25 +13,25 @@ namespace SpotListAPI.Services
     {
         const string baseAddress = "https://api.spotify.com/v1/";
         //API call to spotify
-        public async Task<HttpResponseMessage> SpotifyApi(string auth, string url, string param, string method)
+        public async Task<HttpResponseMessage> SpotifyApi(string auth, string url,string method, string param = "")
         {
             try
             {
                 using (var client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Authorization", auth);
-                    client.DefaultRequestHeaders.Add("Content-Type", "application/json");
+                    client.DefaultRequestHeaders.Add("Authorization", "Bearer " + auth);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     client.BaseAddress = new Uri(baseAddress);
                     var content = new StringContent(param);
 
-                    switch (method)
+                    switch (method.ToLower())
                     {
-                        case "Get":
-                            return await client.GetAsync(url);
-                        case "Post":
-                            return await client.PostAsync(url, content);
-                        case "Put":
-                            return await client.PutAsync(url, content);
+                        case "get":
+                            return await client.GetAsync(baseAddress+url);
+                        case "post":
+                            return await client.PostAsync(baseAddress + url, content);
+                        case "put":
+                            return await client.PutAsync(baseAddress + url, content);
                     }
                 }
                 return new HttpResponseMessage() { StatusCode = HttpStatusCode.NoContent };
