@@ -7,7 +7,6 @@ namespace SpotListAPI.Models
 {
     public class PlaylistRequest : BaseRequest
     {
-        public string Auth { get; set; }
         public string Name { get; set; }
         public int Length { get; set; }
         public string[] Genres { get; set; }
