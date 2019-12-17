@@ -21,8 +21,8 @@ namespace SpotListAPI.Services
             var url = "me";
             //need to figure out a helper to parse this response
             var userResponse = await _spotifyService.SpotifyApi(auth, url,"get");
-
-            var user = UserResponse.Map(await userResponse.Content.ReadAsStringAsync());
+            var userResponseString = await userResponse.Content.ReadAsStringAsync();
+            var user = UserResponse.Map(userResponseString);
 
             return user.Id;
         }

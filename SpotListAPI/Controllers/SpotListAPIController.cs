@@ -38,7 +38,7 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Tracks")]
-        public JsonResult GetPlaylistTracks([FromBody] GetPlaylistTracks request)
+        public JsonResult GetPlaylistTracks([FromBody] GetPlaylistTracksRequest request)
         {
             var auth = HttpContext.Request.Headers["auth"];
             //return song title/artist and time

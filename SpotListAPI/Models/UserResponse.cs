@@ -4,21 +4,29 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace SpotListAPI.Models
 {
     public class UserResponse
     {
-        public string Country { get; set; }
-        public string Display_Name { get; set; }
-        public string Id { get; set; }
+        [JsonPropertyName("display_name")]
+        public string DisplayName { get; set; }
+        [JsonPropertyName("email")]
         public string Email { get; set; }
-        public Dictionary<string, string> External_Urls { get; set; }
-        public Dictionary<string,string> Followers { get; set; }
+        [JsonPropertyName("external_urls")]
+        public Dictionary<string, string> ExternalUrls { get; set; }
+        [JsonPropertyName("followers")]
+        public Follower Followers { get; set; }
+        [JsonPropertyName("href")]
         public string Href { get; set; }
-        public Dictionary<string,string>[] Images { get; set; }
-        public string Product { get; set;}
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+        [JsonPropertyName("images")]
+        public Image[] Images { get; set; }
+        [JsonPropertyName("type")]
         public string Type { get; set; }
+        [JsonPropertyName("uri")]
         public string Uri { get; set; }
 
         public static UserResponse Map (string json)
