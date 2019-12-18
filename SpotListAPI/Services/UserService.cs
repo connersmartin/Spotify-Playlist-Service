@@ -22,7 +22,7 @@ namespace SpotListAPI.Services
         {
             var url = "me";
             var userResponse = await _spotifyService.SpotifyApi(auth, url,"get");
-            var userResponseString = await userResponse.Content.ReadAsStringAsync();
+            var userResponseString = await userResponse.Content.ReadAsByteArrayAsync();
             var user = _helper.Mapper<User>(userResponseString);
 
             return user.Id;

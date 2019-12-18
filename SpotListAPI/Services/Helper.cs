@@ -16,10 +16,9 @@ namespace SpotListAPI.Services
             return "";
         }
 
-        public T Mapper<T>(string json)
+        public T Mapper<T>(byte[] json)
         {
-            var byteString = Encoding.ASCII.GetBytes(json);
-            return JsonSerializer.Deserialize<T>(byteString, null);
+            return JsonSerializer.Deserialize<T>(json, null);
         } 
     }
 }

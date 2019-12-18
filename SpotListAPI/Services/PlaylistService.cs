@@ -47,12 +47,11 @@ namespace SpotListAPI.Services
         {
             var url = string.Format("users/{0}/playlists", playlistRequest.UserId);
             var jsonParams = JsonSerializer.Serialize(new KeyValuePair<string,string>("name",playlistRequest.Name));
-            var addPlaylistResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", jsonParams);
-            //parse the response
-            var addPlaylistResponseString = await addPlaylistResponse.Content.ReadAsStringAsync();
+            var addPlaylistResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", jsonParams);            
             //return the id
-            var playlist = _helper.Mapper<PlaylistResponse>(addPlaylistResponseString);
-            return "";
+            var playlist = _helper.Mapper<PlaylistResponse>(await addPlaylistResponse.Content.ReadAsByteArrayAsync());
+            
+            return playlist.Id;
         }
     }
 }
