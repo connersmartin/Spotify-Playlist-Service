@@ -11,18 +11,19 @@ namespace SpotListAPI.Services
     {
         private readonly ILogger _logger;
         private readonly SpotifyService _spotifyService;
-        public UserService(ILogger<UserService> logger, SpotifyService spotifyService)
+        private readonly Helper _helper;
+        public UserService(ILogger<UserService> logger, SpotifyService spotifyService, Helper helper)
         {
             _logger = logger;
             _spotifyService = spotifyService;
+            _helper = helper;
         }
         public async Task<string> GetUser(string auth)
         {
             var url = "me";
-            //need to figure out a helper to parse this response
             var userResponse = await _spotifyService.SpotifyApi(auth, url,"get");
             var userResponseString = await userResponse.Content.ReadAsStringAsync();
-            var user = UserResponse.Map(userResponseString);
+            var user = _helper.Mapper<User>(userResponseString);
 
             return user.Id;
         }

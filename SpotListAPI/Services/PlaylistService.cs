@@ -15,16 +15,19 @@ namespace SpotListAPI.Services
         private readonly UserService _userService;
         private readonly TrackService _trackService;
         private readonly SpotifyService _spotifyService;
+        private readonly Helper _helper;
 
         public PlaylistService (ILogger<PlaylistService> logger,
                                 UserService userService ,   
                                 TrackService trackService,
-                                SpotifyService spotifyService)
+                                SpotifyService spotifyService,
+                                Helper helper)
         {
             _logger = logger;
             _userService = userService;
             _trackService = trackService;
             _spotifyService = spotifyService;
+            _helper = helper;
         }
 
         //create/list playlist url users/{user_id}/playlists
@@ -46,7 +49,9 @@ namespace SpotListAPI.Services
             var jsonParams = JsonSerializer.Serialize(new KeyValuePair<string,string>("name",playlistRequest.Name));
             var addPlaylistResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", jsonParams);
             //parse the response
+            var addPlaylistResponseString = await addPlaylistResponse.Content.ReadAsStringAsync();
             //return the id
+            var playlist = _helper.Mapper<PlaylistResponse>(addPlaylistResponseString);
             return "";
         }
     }

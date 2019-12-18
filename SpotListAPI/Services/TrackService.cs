@@ -11,12 +11,19 @@ namespace SpotListAPI.Services
         //add/get tracks url playlists/{playlist_id}/tracks
         public void AddTracksToPlaylist(PlaylistRequest playlistRequest)
         {
+            //Parse the params to json
 
+            //get the recomendations
+
+            //add the tracks
         }
 
-        public  GetTracksFromPlaylist(string id)
+        public async Task<TrackResponse> GetTracksFromPlaylist(PlaylistRequest playlistRequest)
         {
-            return new Object();
+            //get tracks from spotify
+
+            //parse the tracks
+            return new TrackResponse();
         }
     }
 }

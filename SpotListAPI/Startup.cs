@@ -31,6 +31,7 @@ namespace SpotListAPI
             services.AddSingleton<SpotifyService>();
             services.AddSingleton<PlaylistService>();
             services.AddSingleton<TrackService>();
+            services.AddSingleton<Helper>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
