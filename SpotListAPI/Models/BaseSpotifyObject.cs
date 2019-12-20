@@ -12,8 +12,6 @@ namespace SpotListAPI.Models
         public string Href { get; set; }
         [JsonPropertyName("id")]
         public string Id { get; set; }
-        [JsonPropertyName("images")]
-        public Image[] Images { get; set; }
         [JsonPropertyName("type")]
         public string Type { get; set; }
         [JsonPropertyName("uri")]

@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace SpotListAPI.Models
 {
     public class PlaylistTrack
     {
+        [JsonPropertyName("added_at")]
+        public DateTime AddedAt { get; set; }
+        [JsonPropertyName("added_by")]
+        public string AddedBy { get; set; }
+        [JsonPropertyName("is_local")]
+        public bool IsLocal { get; set; }
+        [JsonPropertyName("track")]
+        public Track Track { get; set; }
     }
 
-//    added_at a timestamp The date and time the track was added.
-//Note that some very old playlists may return null in this field.
-//added_by a user object The Spotify user who added the track.
-//Note that some very old playlists may return null in this field.
-//is_local a Boolean Whether this track is a local file or not.
-//track a track object Information about the track.
 }

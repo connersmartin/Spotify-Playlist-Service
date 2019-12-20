@@ -16,6 +16,8 @@ namespace SpotListAPI.Models
         public string Email { get; set; }
         [JsonPropertyName("followers")]
         public Follower Followers { get; set; }
-      
+        [JsonPropertyName("images")]
+        public Image[] Images { get; set; }
+
     }
 }
