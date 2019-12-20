@@ -19,18 +19,24 @@ namespace SpotListAPI.Controllers
 
         private readonly ILogger<SpotListAPIController> _logger;
         private readonly PlaylistService _playlistService;
+        private readonly TrackService _trackService;
 
-        public SpotListAPIController(ILogger<SpotListAPIController> logger, PlaylistService playlistService)
+        public SpotListAPIController(ILogger<SpotListAPIController> logger,
+                                    PlaylistService playlistService,
+                                    TrackService trackService)
         {
             _logger = logger;
             _playlistService = playlistService;
+            _trackService = trackService;
         }
 
         [HttpGet]
         [Route("Playlist")]
-        public JsonResult GetPlaylists([FromBody] GetPlaylistRequest request)
+        public JsonResult GetPlaylists([FromBody] PlaylistRequest request)
         {            
-            var auth = HttpContext.Request.Headers["auth"];                   
+            request.Auth = HttpContext.Request.Headers["auth"];
+
+            var playlists = _playlistService.GetPlaylists(request);
             
             //return id of playlist and playlist name/length
             return new JsonResult("");
@@ -40,7 +46,8 @@ namespace SpotListAPI.Controllers
         [Route("Tracks")]
         public JsonResult GetPlaylistTracks([FromBody] GetPlaylistTracksRequest request)
         {
-            var auth = HttpContext.Request.Headers["auth"];
+            request.Auth = HttpContext.Request.Headers["auth"];
+            var tracks = _trackService.GetTracksFromPlaylist(request);
             //return song title/artist and time
             return new JsonResult("");
         }
@@ -60,7 +67,7 @@ namespace SpotListAPI.Controllers
         [Route("Edit")]
         public JsonResult UpdatePlaylist([FromBody] PlaylistRequest request)
         {
-            var auth = HttpContext.Request.Headers["auth"];
+            request.Auth = HttpContext.Request.Headers["auth"];
             //return successful edit title
             return new JsonResult("");
         }       

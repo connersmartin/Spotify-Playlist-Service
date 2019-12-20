@@ -49,9 +49,20 @@ namespace SpotListAPI.Services
             var jsonParams = JsonSerializer.Serialize(new KeyValuePair<string,string>("name",playlistRequest.Name));
             var addPlaylistResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", jsonParams);            
             //return the id
-            var playlist = _helper.Mapper<PlaylistResponse>(await addPlaylistResponse.Content.ReadAsByteArrayAsync());
+            var playlist = _helper.Mapper<Playlist>(await addPlaylistResponse.Content.ReadAsByteArrayAsync());
             
             return playlist.Id;
+        }
+
+        public async Task<List<Playlist>> GetPlaylists (PlaylistRequest playlistRequest)
+        {
+            var url = string.Format("me/playlists");
+
+            var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+
+            var getPlaylists = _helper.Mapper<List<Playlist>>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
+
+            return getPlaylists;
         }
     }
 }
