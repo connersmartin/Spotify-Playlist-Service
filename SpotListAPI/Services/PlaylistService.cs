@@ -37,9 +37,9 @@ namespace SpotListAPI.Services
             //create the playlist
             playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
             //add tracks to the playlist
-            _trackService.AddTracksToPlaylist(playlistRequest);
-
-            return new PlaylistResponse();
+            var addTracksResponse= await _trackService.AddTracksToPlaylist(playlistRequest);
+            addTracksResponse.Title = playlistRequest.Name;
+            return addTracksResponse;
         }
         //update playlist details url playlists/{playlist_id}
 
@@ -54,7 +54,7 @@ namespace SpotListAPI.Services
             return playlist.Id;
         }
 
-        public async Task<List<Playlist>> GetPlaylists (PlaylistRequest playlistRequest)
+        public async Task<List<PlaylistResponse>> GetPlaylists (PlaylistRequest playlistRequest)
         {
             var url = string.Format("me/playlists");
 
@@ -62,7 +62,23 @@ namespace SpotListAPI.Services
 
             var getPlaylists = _helper.Mapper<List<Playlist>>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
 
-            return getPlaylists;
+            return PlaylistToPlaylistResponse(getPlaylists);
+        }
+
+        public List<PlaylistResponse> PlaylistToPlaylistResponse(List<Playlist> playlists)
+        {
+            var playlistResponse = new List<PlaylistResponse>();
+            foreach (var p in playlists)
+            {
+                playlistResponse.Add(new PlaylistResponse
+                {
+                    Id=p.Id,
+                    Title = p.Name,
+                    Length = p.Tracks.Sum(x=>x.DurationMs),
+                    TrackCount = p.Tracks.Length
+                });
+            }
+            return playlistResponse;
         }
     }
 }

@@ -37,8 +37,10 @@ namespace SpotListAPI.Controllers
             request.Auth = HttpContext.Request.Headers["auth"];
 
             var playlists = _playlistService.GetPlaylists(request);
-            
+
             //return id of playlist and playlist name/length
+            var jsonPlaylists = JsonSerializer.Serialize(playlists);
+
             return new JsonResult("");
         }
 
@@ -48,8 +50,10 @@ namespace SpotListAPI.Controllers
         {
             request.Auth = HttpContext.Request.Headers["auth"];
             var tracks = _trackService.GetTracksFromPlaylist(request);
+
+            var jsonTracks = JsonSerializer.Serialize(tracks);
             //return song title/artist and time
-            return new JsonResult("");
+            return new JsonResult(jsonTracks);
         }
 
         [HttpPost]
