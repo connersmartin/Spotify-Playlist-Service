@@ -36,7 +36,7 @@ namespace SpotListAPI.Services
                     break;
                 }
             }
-            trackString =trackString.Substring(-1, 1);
+            trackString =trackString.Remove(trackString.Length-1);
 
             var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackString);
 
@@ -64,14 +64,26 @@ namespace SpotListAPI.Services
             //get a ballpark limit could make this more precise
             var limitRec = playlistRequest.Length / 3;
             var url = string.Format("recommendations?limit={0}&",limitRec.ToString());
-
+            playlistRequest.Artist = await SearchArtistFromName(playlistRequest);
             var parsedParams = GetParsedParams(playlistRequest);
 
             var getRecommendedTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url+parsedParams, "get");
 
-            var getRecommendedTracks = _helper.Mapper<List<Track>>(await getRecommendedTracksResponse.Content.ReadAsByteArrayAsync());
+            var getRecommendedTracks = _helper.Mapper<RecommendedTracksResponse>(await getRecommendedTracksResponse.Content.ReadAsByteArrayAsync()).tracks;
 
-            return getRecommendedTracks;
+            return getRecommendedTracks.ToList();
+        }
+
+        private async Task<string> SearchArtistFromName(PlaylistRequest playlistRequest)
+        {
+            var artistEncoded = playlistRequest.Artist.Replace(" ", "%20");
+            var url = string.Format("search?q={0}&type=artist",artistEncoded);
+
+            var artistSearchResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+
+            var artistSearch = _helper.Mapper<ArtistsResponse>(await artistSearchResponse.Content.ReadAsByteArrayAsync());
+
+            return artistSearch.artists.items[0].Id;
         }
         #region Helper Functions
         public string GetParsedParams(PlaylistRequest p)
@@ -80,7 +92,7 @@ namespace SpotListAPI.Services
             paramString += string.Join(",", p.Genres).Trim();
             paramString += "&seed_artists=" + p.Artist;
             paramString += "&target_tempo=" + p.Tempo.ToString();
-            paramString += "&target_danceability" +p.Dance.ToString();
+            paramString += "&target_danceability=" +p.Dance.ToString();
             paramString += "&target_energy=" + p.Energy.ToString();
             paramString += "&target_instrumentalness=" + p.Instrumental.ToString();
             return paramString;

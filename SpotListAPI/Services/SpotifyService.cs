@@ -20,7 +20,7 @@ namespace SpotListAPI.Services
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("Authorization", "Bearer "+ auth);
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    
                     client.BaseAddress = new Uri(baseAddress);
                     var content = new StringContent(param);
 
@@ -29,8 +29,10 @@ namespace SpotListAPI.Services
                         case "get":
                             return await client.GetAsync(baseAddress+url);
                         case "post":
+                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                             return await client.PostAsync(url, content);
                         case "put":
+                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                             return await client.PutAsync(url, content);
                     }
                 }

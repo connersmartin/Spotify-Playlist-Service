@@ -58,10 +58,12 @@ namespace SpotListAPI.Controllers
 
         [HttpPost]
         [Route("Create")]
-        public JsonResult CreatePlaylist([FromBody] PlaylistRequest request)
+        public async Task<JsonResult> CreatePlaylist([FromBody] PlaylistRequest request)
         {          
             request.Auth = HttpContext.Request.Headers["auth"];
-            var playList = _playlistService.CreatePlaylist(request);
+            //hard coding for testing
+            request.Genres[0] = "pop";
+            var playList = await _playlistService.CreatePlaylist(request);
             //return playlist link
             var interim = JsonSerializer.Serialize(playList);
             return new JsonResult(interim);
