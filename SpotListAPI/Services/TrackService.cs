@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using SpotListAPI.Models;
 
@@ -18,6 +19,7 @@ namespace SpotListAPI.Services
         //add/get tracks url playlists/{playlist_id}/tracks
         public async Task<PlaylistResponse> AddTracksToPlaylist(PlaylistRequest playlistRequest)
         {
+            var paramDict = new Dictionary<string, string[]>();
             var url = string.Format("playlists/{0}/tracks",playlistRequest.Id);
             //get the recomendations
             var tracks = await GetRecommendedTracks(playlistRequest);
@@ -38,7 +40,13 @@ namespace SpotListAPI.Services
             }
             trackString =trackString.Remove(trackString.Length-1);
 
-            var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackString);
+            var stringArray = new string[1];
+            stringArray[0] = trackString;
+            paramDict.Add("uris", stringArray);
+
+            var trackStringJson =JsonSerializer.Serialize(paramDict);
+
+            var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);
 
             var addTracks = addTracksResponse.StatusCode.ToString();
 

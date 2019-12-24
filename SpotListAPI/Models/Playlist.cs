@@ -21,11 +21,16 @@ namespace SpotListAPI.Models
         [JsonPropertyName("snapshot_id")]
         public string SnapshotId { get; set; }
         [JsonPropertyName("tracks")]
-        public Track[] Tracks { get; set; }
+        public PaginatedTrackResponse Tracks { get; set; }
         [JsonPropertyName("followers")]
         public Follower Followers { get; set; }
         [JsonPropertyName("images")]
         public Image[] Images { get; set; }
+        [JsonPropertyName("primary_color")]
+        public string PrimaryColor { get; set; }
+
+
+
 
     }
 

@@ -45,8 +45,10 @@ namespace SpotListAPI.Services
 
         public async Task<string> AddBlankPlaylist(PlaylistRequest playlistRequest)
         {
+            var paramDict = new Dictionary<string, string>();
+            paramDict.Add("name", playlistRequest.Name);
             var url = string.Format("users/{0}/playlists", playlistRequest.UserId);
-            var jsonParams = JsonSerializer.Serialize(new KeyValuePair<string,string>("name",playlistRequest.Name));
+            var jsonParams = JsonSerializer.Serialize(paramDict);
             var addPlaylistResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", jsonParams);            
             //return the id
             var playlist = _helper.Mapper<Playlist>(await addPlaylistResponse.Content.ReadAsByteArrayAsync());
@@ -74,8 +76,8 @@ namespace SpotListAPI.Services
                 {
                     Id=p.Id,
                     Title = p.Name,
-                    Length = p.Tracks.Sum(x=>x.DurationMs),
-                    TrackCount = p.Tracks.Length
+                    Length = p.Tracks.items.Sum(x=>x.DurationMs),
+                    TrackCount = p.Tracks.items.Length
                 });
             }
             return playlistResponse;

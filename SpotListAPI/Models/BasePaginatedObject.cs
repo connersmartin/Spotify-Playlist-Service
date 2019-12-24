@@ -5,10 +5,9 @@ using System.Threading.Tasks;
 
 namespace SpotListAPI.Models
 {
-    public class ArtistSearchResponse
+    public class BasePaginatedObject
     {
         public string href { get; set; }
-        public Artist[] items { get; set; }
         public int limit { get; set; }
         public int? next { get; set; }
         public int offset { get; set; }

@@ -5,8 +5,7 @@ using System.Threading.Tasks;
 
 namespace SpotListAPI.Models
 {
-    public class ArtistsResponse
+    public class GetTracksResponse
     {
-        public ArtistSearchResponse artists { get; set; }
     }
 }
