@@ -61,8 +61,7 @@ namespace SpotListAPI.Controllers
         public async Task<JsonResult> CreatePlaylist([FromBody] PlaylistRequest request)
         {          
             request.Auth = HttpContext.Request.Headers["auth"];
-            //hard coding for testing
-            request.Genres[0] = "pop";
+            
             var playList = await _playlistService.CreatePlaylist(request);
             //return playlist link
             var interim = JsonSerializer.Serialize(playList);

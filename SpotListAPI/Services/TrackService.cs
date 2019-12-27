@@ -25,24 +25,21 @@ namespace SpotListAPI.Services
             var tracks = await GetRecommendedTracks(playlistRequest);
             //add the tracks
             var trackLength = 0;
-            var trackString = "";
+            var trackList = new List<string>();
             foreach (var t in tracks)
             {
-                if (trackLength <= playlistRequest.Length)
+                if (trackLength <= playlistRequest.Length * 60000)
                 {
                     trackLength += t.DurationMs;
-                    trackString += t.Uri+",";
+                    trackList.Add(t.Uri);
                 }
                 else
                 {
                     break;
                 }
             }
-            trackString =trackString.Remove(trackString.Length-1);
-
-            var stringArray = new string[1];
-            stringArray[0] = trackString;
-            paramDict.Add("uris", stringArray);
+    
+            paramDict.Add("uris", trackList.ToArray());
 
             var trackStringJson =JsonSerializer.Serialize(paramDict);
 
@@ -72,7 +69,10 @@ namespace SpotListAPI.Services
             //get a ballpark limit could make this more precise
             var limitRec = playlistRequest.Length / 3;
             var url = string.Format("recommendations?limit={0}&",limitRec.ToString());
-            playlistRequest.Artist = await SearchArtistFromName(playlistRequest);
+            if (playlistRequest.Artist != null && playlistRequest.Artist.Trim() !="")
+            {
+                playlistRequest.Artist = await SearchArtistFromName(playlistRequest);
+            }
             var parsedParams = GetParsedParams(playlistRequest);
 
             var getRecommendedTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url+parsedParams, "get");
@@ -96,9 +96,9 @@ namespace SpotListAPI.Services
         #region Helper Functions
         public string GetParsedParams(PlaylistRequest p)
         {
-            var paramString = "seed_genres=";
-            paramString += string.Join(",", p.Genres).Trim();
-            paramString += "&seed_artists=" + p.Artist;
+            var paramString = "";
+            if (p.Genres.Length > 0) { paramString += "seed_genres=" + string.Join(",", p.Genres).Trim(); };
+            if (p.Artist != "" && p.Artist!=null) { paramString += "&seed_artists=" + p.Artist; };
             paramString += "&target_tempo=" + p.Tempo.ToString();
             paramString += "&target_danceability=" +p.Dance.ToString();
             paramString += "&target_energy=" + p.Energy.ToString();
