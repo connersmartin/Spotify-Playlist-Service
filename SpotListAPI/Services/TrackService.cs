@@ -68,7 +68,7 @@ namespace SpotListAPI.Services
         {
             //get a ballpark limit could make this more precise
             var limitRec = playlistRequest.Length / 3;
-            var url = string.Format("recommendations?limit={0}&",limitRec.ToString());
+            var url = string.Format("recommendations?limit={0}&market=from_token&",limitRec.ToString());
             if (playlistRequest.Artist != null && playlistRequest.Artist.Trim() !="")
             {
                 playlistRequest.Artist = await SearchArtistFromName(playlistRequest);
