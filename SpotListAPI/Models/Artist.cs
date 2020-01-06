@@ -10,6 +10,8 @@ namespace SpotListAPI.Models
     {
         [JsonPropertyName("name")]
         public string Name { get; set; }
+        [JsonPropertyName("followers")]
+        public Follower Followers { get; set; }
     }
 
 }

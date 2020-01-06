@@ -84,14 +84,22 @@ namespace SpotListAPI.Services
 
         private async Task<string> SearchArtistFromName(PlaylistRequest playlistRequest)
         {
-            var artistEncoded = playlistRequest.Artist.Replace(" ", "%20");
-            var url = string.Format("search?q={0}&type=artist",artistEncoded);
+            var artistString = "";
+            var artistSplit = playlistRequest.Artist.Split(',');
+            foreach (var artist in artistSplit)
+            {
+                var artistEncoded = artist.Replace(" ", "%20");
+                var url = string.Format("search?q={0}&type=artist&limit=1",artistEncoded);
 
-            var artistSearchResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+                var artistSearchResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
 
-            var artistSearch = _helper.Mapper<ArtistsResponse>(await artistSearchResponse.Content.ReadAsByteArrayAsync());
-
-            return artistSearch.artists.items[0].Id;
+                var artistSearch = _helper.Mapper<ArtistsResponse>(await artistSearchResponse.Content.ReadAsByteArrayAsync());
+                if (artistSearch.artists.items.Length > 0)
+                {
+                    artistString += "," + artistSearch.artists.items[0].Id;
+                }
+            }
+            return artistString.Substring(1,artistString.Length-1);
         }
         #region Helper Functions
         public string GetParsedParams(PlaylistRequest p)
