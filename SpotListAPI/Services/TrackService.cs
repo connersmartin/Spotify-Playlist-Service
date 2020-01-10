@@ -88,15 +88,18 @@ namespace SpotListAPI.Services
             var artistSplit = playlistRequest.Artist.Split(',');
             foreach (var artist in artistSplit)
             {
-                var artistEncoded = artist.Replace(" ", "%20");
-                var url = string.Format("search?q={0}&type=artist&limit=1",artistEncoded);
-
-                var artistSearchResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
-
-                var artistSearch = _helper.Mapper<ArtistsResponse>(await artistSearchResponse.Content.ReadAsByteArrayAsync());
-                if (artistSearch.artists.items.Length > 0)
+                if (artist != "")
                 {
-                    artistString += "," + artistSearch.artists.items[0].Id;
+                    var artistEncoded = artist.Replace(" ", "%20");
+                    var url = string.Format("search?q={0}&type=artist&limit=1", artistEncoded);
+
+                    var artistSearchResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+
+                    var artistSearch = _helper.Mapper<ArtistsResponse>(await artistSearchResponse.Content.ReadAsByteArrayAsync());
+                    if (artistSearch.artists.items.Length > 0)
+                    {
+                        artistString += "," + artistSearch.artists.items[0].Id;
+                    }
                 }
             }
             return artistString.Substring(1,artistString.Length-1);
@@ -107,10 +110,10 @@ namespace SpotListAPI.Services
             var paramString = "";
             if (p.Genres.Length > 0) { paramString += "seed_genres=" + string.Join(",", p.Genres).Trim(); };
             if (p.Artist != "" && p.Artist!=null) { paramString += "&seed_artists=" + p.Artist; };
-            paramString += "&target_tempo=" + p.Tempo.ToString();
-            paramString += "&target_danceability=" +p.Dance.ToString();
-            paramString += "&target_energy=" + p.Energy.ToString();
-            paramString += "&target_instrumentalness=" + p.Instrumental.ToString();
+            if (p.Tempo != null) { paramString += "&target_tempo=" + p.Tempo; }
+            if (p.Dance != null) { paramString += "&target_danceability=" + p.Dance; }
+            if (p.Energy != null) { paramString += "&target_energy=" + p.Energy; }
+            if (p.Instrumental != null) { paramString += "&target_instrumentalness=" + p.Instrumental; }
             return paramString;
         }
 

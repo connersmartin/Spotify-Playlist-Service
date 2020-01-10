@@ -11,9 +11,9 @@ namespace SpotListAPI.Models
         public int Length { get; set; }
         public string[] Genres { get; set; }
         public string Artist { get; set; }
-        public decimal Tempo { get; set; }
-        public decimal Dance { get; set; }
-        public decimal Energy { get; set; }
-        public decimal Instrumental { get; set; }
+        public string Tempo { get; set; }
+        public string Dance { get; set; }
+        public string Energy { get; set; }
+        public string Instrumental { get; set; }
     }
 }
