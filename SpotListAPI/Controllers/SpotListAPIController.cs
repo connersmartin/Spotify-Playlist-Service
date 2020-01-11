@@ -32,40 +32,39 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Playlist")]
-        public JsonResult GetPlaylists([FromBody] PlaylistRequest request)
+        public async Task<List<PlaylistResponse>> GetPlaylists([FromBody] PlaylistRequest request)
         {            
             request.Auth = HttpContext.Request.Headers["auth"];
 
-            var playlists = _playlistService.GetPlaylists(request);
+            var playlists = await _playlistService.GetPlaylists(request);
 
             //return id of playlist and playlist name/length
             var jsonPlaylists = JsonSerializer.Serialize(playlists);
 
-            return new JsonResult("");
+            return playlists;
         }
 
         [HttpGet]
         [Route("Tracks")]
-        public JsonResult GetPlaylistTracks([FromBody] GetPlaylistTracksRequest request)
+        public async Task<List<TrackResponse>> GetPlaylistTracks([FromBody] GetPlaylistTracksRequest request)
         {
             request.Auth = HttpContext.Request.Headers["auth"];
-            var tracks = _trackService.GetTracksFromPlaylist(request);
+            var tracks = await _trackService.GetTracksFromPlaylist(request);
 
             var jsonTracks = JsonSerializer.Serialize(tracks);
             //return song title/artist and time
-            return new JsonResult(jsonTracks);
+            return tracks;
         }
 
         [HttpPost]
         [Route("Create")]
-        public async Task<JsonResult> CreatePlaylist([FromBody] PlaylistRequest request)
+        public async Task<PlaylistResponse> CreatePlaylist([FromBody] PlaylistRequest request)
         {          
             request.Auth = HttpContext.Request.Headers["auth"];
             
             var playList = await _playlistService.CreatePlaylist(request);
             //return playlist link
-            var interim = JsonSerializer.Serialize(playList);
-            return new JsonResult(interim);
+            return playList;
         }
 
         [HttpPut]
