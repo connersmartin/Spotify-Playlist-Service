@@ -56,15 +56,28 @@ namespace SpotListAPI.Services
             return playlist.Id;
         }
 
-        public async Task<List<PlaylistResponse>> GetPlaylists (PlaylistRequest playlistRequest)
+        public async Task<List<PlaylistResponse>> GetPlaylists(PlaylistRequest playlistRequest)
         {
             var url = string.Format("me/playlists");
+            var getPlaylists = new PaginatedPlaylistResponse()
+            {
+                next = ""
+            };
+            var playlistList = new List<Playlist>();
 
-            var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+            while (getPlaylists.next !=null)
+            {
+                var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
 
-            var getPlaylists = _helper.Mapper<List<Playlist>>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
+                getPlaylists = _helper.Mapper<PaginatedPlaylistResponse>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
 
-            return PlaylistToPlaylistResponse(getPlaylists);
+                playlistList.AddRange(getPlaylists.items);
+
+                url = string.Format("me/playlists?offset={0}",getPlaylists.limit+getPlaylists.offset); 
+
+            }
+            //doesn't work yet
+            return PlaylistToPlaylistResponse(playlistList);
         }
 
         public List<PlaylistResponse> PlaylistToPlaylistResponse(List<Playlist> playlists)

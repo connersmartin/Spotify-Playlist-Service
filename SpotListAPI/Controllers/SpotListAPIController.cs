@@ -32,26 +32,31 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Playlist")]
-        public async Task<List<PlaylistResponse>> GetPlaylists([FromBody] PlaylistRequest request)
-        {            
-            request.Auth = HttpContext.Request.Headers["auth"];
-
+        public async Task<List<PlaylistResponse>> GetPlaylists()
+        {
+            //cache this
+            var request = new PlaylistRequest()
+            {
+                Auth = HttpContext.Request.Headers["auth"]
+            };
             var playlists = await _playlistService.GetPlaylists(request);
 
             //return id of playlist and playlist name/length
-            var jsonPlaylists = JsonSerializer.Serialize(playlists);
-
             return playlists;
         }
 
         [HttpGet]
         [Route("Tracks")]
-        public async Task<List<TrackResponse>> GetPlaylistTracks([FromBody] GetPlaylistTracksRequest request)
+        public async Task<List<TrackResponse>> GetPlaylistTracks(string id)
         {
-            request.Auth = HttpContext.Request.Headers["auth"];
+            var request = new GetPlaylistTracksRequest()
+            {
+                Auth = HttpContext.Request.Headers["auth"],
+                Id = id
+            };
+            
             var tracks = await _trackService.GetTracksFromPlaylist(request);
 
-            var jsonTracks = JsonSerializer.Serialize(tracks);
             //return song title/artist and time
             return tracks;
         }
