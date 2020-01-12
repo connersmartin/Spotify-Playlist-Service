@@ -7,7 +7,7 @@ namespace SpotListAPI.Models
 {
     public class TrackResponse
     {
-        public List<string> Artists { get; set; }
+        public string Artists { get; set; }
         public string Title { get; set; }
         public int Length { get; set; }
     }

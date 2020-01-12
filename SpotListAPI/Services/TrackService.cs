@@ -50,18 +50,21 @@ namespace SpotListAPI.Services
             return new PlaylistResponse() { Id = playlistRequest.Id, Length = trackLength, TrackCount = tracks.Count }; 
         }
 
-        public async Task<List<TrackResponse>> GetTracksFromPlaylist(GetPlaylistTracksRequest playlistTracksRequest)
+        public async Task<List<Track>> GetTracksFromPlaylist(GetPlaylistTracksRequest playlistTracksRequest)
         {
             var url = string.Format("playlists/{0}/tracks", playlistTracksRequest.Id);
             //get tracks from spotify
             var trackResponse = await _spotifyService.SpotifyApi(playlistTracksRequest.Auth, url, "get");
 
             //parse the tracks
-            var tracks = _helper.Mapper<List<Track>>(await trackResponse.Content.ReadAsByteArrayAsync());
+            var tracks = _helper.Mapper<PaginatedPlaylistTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
 
+            var playlistTracks = new List<Track>();
+
+            playlistTracks = tracks.items.Select(t => t.Track).ToList();
             //do some magic to get the proper response
 
-            return TracksToTrackResponse(tracks);
+            return playlistTracks;
         }
 
         public async Task<List<Track>> GetRecommendedTracks (PlaylistRequest playlistRequest)
@@ -126,7 +129,7 @@ namespace SpotListAPI.Services
                 {
                     Title = t.Name,
                     Length = t.DurationMs,
-                    Artists = t.Artists.Select(x => x.Name).ToList()
+                    Artists = t.Artists.FirstOrDefault().Name
                 });
             }
             return trackResponse;

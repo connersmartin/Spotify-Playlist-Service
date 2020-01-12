@@ -76,6 +76,18 @@ namespace SpotListAPI.Services
                 url = string.Format("me/playlists?offset={0}",getPlaylists.limit+getPlaylists.offset); 
 
             }
+            foreach (var playlist in playlistList)
+            {
+                var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
+                {
+                    Auth = playlistRequest.Auth,
+                    Id = playlist.Id,
+                    UserId = playlist.Owner.Id
+                });
+
+                playlist.Tracks.items = t.ToArray();
+
+            }
             //doesn't work yet
             return PlaylistToPlaylistResponse(playlistList);
         }
@@ -85,6 +97,7 @@ namespace SpotListAPI.Services
             var playlistResponse = new List<PlaylistResponse>();
             foreach (var p in playlists)
             {
+               
                 playlistResponse.Add(new PlaylistResponse
                 {
                     Id=p.Id,

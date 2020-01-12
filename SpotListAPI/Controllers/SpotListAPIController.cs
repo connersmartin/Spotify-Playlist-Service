@@ -39,26 +39,26 @@ namespace SpotListAPI.Controllers
             {
                 Auth = HttpContext.Request.Headers["auth"]
             };
-            var playlists = await _playlistService.GetPlaylists(request);
-
+            //var playlists = await _playlistService.GetPlaylists(request);
+            var playlists = new List<PlaylistResponse>() { new PlaylistResponse() { Id = "2LVodS1Yq38tFy5Pck2grU", Length = 90, Title = "latin ska", TrackCount = 9 } };
             //return id of playlist and playlist name/length
             return playlists;
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("Tracks")]
-        public async Task<List<TrackResponse>> GetPlaylistTracks(string id)
+        public async Task<List<TrackResponse>> Tracks([FromBody] GetPlaylistTracksRequest id)
         {
             var request = new GetPlaylistTracksRequest()
             {
                 Auth = HttpContext.Request.Headers["auth"],
-                Id = id
+                Id = id.Id
             };
             
             var tracks = await _trackService.GetTracksFromPlaylist(request);
 
             //return song title/artist and time
-            return tracks;
+            return _trackService.TracksToTrackResponse(tracks);
         }
 
         [HttpPost]
