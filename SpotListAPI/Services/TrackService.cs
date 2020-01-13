@@ -16,7 +16,8 @@ namespace SpotListAPI.Services
             _spotifyService = spotifyService;
             _helper = helper;
         }
-        //add/get tracks url playlists/{playlist_id}/tracks
+
+        //add tracks to playlist
         public async Task<PlaylistResponse> AddTracksToPlaylist(PlaylistRequest playlistRequest)
         {
             var paramDict = new Dictionary<string, string[]>();
@@ -49,7 +50,8 @@ namespace SpotListAPI.Services
 
             return new PlaylistResponse() { Id = playlistRequest.Id, Length = trackLength, TrackCount = tracks.Count }; 
         }
-
+        //Gets the tracks from a given playlist
+        //TODO Cache this
         public async Task<List<Track>> GetTracksFromPlaylist(GetPlaylistTracksRequest playlistTracksRequest)
         {
             var url = string.Format("playlists/{0}/tracks", playlistTracksRequest.Id);
@@ -66,7 +68,7 @@ namespace SpotListAPI.Services
 
             return playlistTracks;
         }
-
+        //Uses specific parameters to return recommended songs
         public async Task<List<Track>> GetRecommendedTracks (PlaylistRequest playlistRequest)
         {
             //get a ballpark limit could make this more precise
@@ -85,6 +87,8 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
+        #region Helper Functions
+        //Gets artist id from name for use in recommendation
         private async Task<string> SearchArtistFromName(PlaylistRequest playlistRequest)
         {
             var artistString = "";
@@ -107,7 +111,7 @@ namespace SpotListAPI.Services
             }
             return artistString.Substring(1,artistString.Length-1);
         }
-        #region Helper Functions
+        //gets parameters into a query string
         public string GetParsedParams(PlaylistRequest p)
         {
             var paramString = "";
@@ -120,6 +124,7 @@ namespace SpotListAPI.Services
             return paramString;
         }
 
+        //Mapper to return back only info needed
         public List<TrackResponse> TracksToTrackResponse (List<Track> tracks)
         {
             var trackResponse = new List<TrackResponse>();

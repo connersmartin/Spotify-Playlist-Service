@@ -10,12 +10,7 @@ namespace SpotListAPI.Services
 {
     public class Helper
     {
-        public string ParamsToJson(Dictionary<string,string> paramDict)
-        {
-
-            return "";
-        }
-
+        //General mapper
         public T Mapper<T>(byte[] json)
         {
             return JsonSerializer.Deserialize<T>(json, null);

@@ -41,8 +41,8 @@ namespace SpotListAPI.Services
             addTracksResponse.Title = playlistRequest.Name;
             return addTracksResponse;
         }
-        //update playlist details url playlists/{playlist_id}
-
+        
+        //Add blank playlist to be filled
         public async Task<string> AddBlankPlaylist(PlaylistRequest playlistRequest)
         {
             var paramDict = new Dictionary<string, string>();
@@ -56,6 +56,8 @@ namespace SpotListAPI.Services
             return playlist.Id;
         }
 
+        //Get user's playlists
+        //TODO cache this
         public async Task<List<PlaylistResponse>> GetPlaylists(PlaylistRequest playlistRequest)
         {
             var url = string.Format("me/playlists");
@@ -64,7 +66,7 @@ namespace SpotListAPI.Services
                 next = ""
             };
             var playlistList = new List<Playlist>();
-
+            //deal with pagination
             while (getPlaylists.next !=null)
             {
                 var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
@@ -76,6 +78,7 @@ namespace SpotListAPI.Services
                 url = string.Format("me/playlists?offset={0}",getPlaylists.limit+getPlaylists.offset); 
 
             }
+            //Populate tracks in playlist to get length
             foreach (var playlist in playlistList)
             {
                 var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
@@ -88,10 +91,10 @@ namespace SpotListAPI.Services
                 playlist.Tracks.items = t.ToArray();
 
             }
-            //doesn't work yet
             return PlaylistToPlaylistResponse(playlistList);
         }
 
+        //Mapper to return specific data
         public List<PlaylistResponse> PlaylistToPlaylistResponse(List<Playlist> playlists)
         {
             var playlistResponse = new List<PlaylistResponse>();

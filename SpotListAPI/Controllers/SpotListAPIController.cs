@@ -39,8 +39,9 @@ namespace SpotListAPI.Controllers
             {
                 Auth = HttpContext.Request.Headers["auth"]
             };
-            //var playlists = await _playlistService.GetPlaylists(request);
-            var playlists = new List<PlaylistResponse>() { new PlaylistResponse() { Id = "2LVodS1Yq38tFy5Pck2grU", Length = 90, Title = "latin ska", TrackCount = 9 } };
+            
+            var playlists = await _playlistService.GetPlaylists(request);
+            
             //return id of playlist and playlist name/length
             return playlists;
         }
@@ -72,6 +73,8 @@ namespace SpotListAPI.Controllers
             return playList;
         }
 
+
+        //Potentially not used
         [HttpPut]
         [Route("Edit")]
         public JsonResult UpdatePlaylist([FromBody] PlaylistRequest request)

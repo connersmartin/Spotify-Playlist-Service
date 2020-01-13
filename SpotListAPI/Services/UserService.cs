@@ -18,6 +18,7 @@ namespace SpotListAPI.Services
             _spotifyService = spotifyService;
             _helper = helper;
         }
+        //Gets userid of current user
         public async Task<string> GetUser(string auth)
         {
             var url = "me";
