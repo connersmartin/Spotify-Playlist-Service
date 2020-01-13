@@ -3,17 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using SpotListAPI.Models;
 
 namespace SpotListAPI.Services
 {
     public class TrackService
     {
+        private readonly IMemoryCache _cache;
         private readonly SpotifyService _spotifyService;
+        private readonly UserService _userService;
         private readonly Helper _helper;
-        public TrackService(SpotifyService spotifyService, Helper helper)
+        public TrackService(IMemoryCache cache, SpotifyService spotifyService, UserService userService, Helper helper)
         {
+            _cache = cache;
             _spotifyService = spotifyService;
+            _userService = userService;
             _helper = helper;
         }
 
@@ -54,17 +59,24 @@ namespace SpotListAPI.Services
         //TODO Cache this
         public async Task<List<Track>> GetTracksFromPlaylist(GetPlaylistTracksRequest playlistTracksRequest)
         {
-            var url = string.Format("playlists/{0}/tracks", playlistTracksRequest.Id);
-            //get tracks from spotify
-            var trackResponse = await _spotifyService.SpotifyApi(playlistTracksRequest.Auth, url, "get");
-
-            //parse the tracks
-            var tracks = _helper.Mapper<PaginatedPlaylistTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
-
+            var user = await _userService.GetUser(playlistTracksRequest.Auth);
             var playlistTracks = new List<Track>();
 
-            playlistTracks = tracks.items.Select(t => t.Track).ToList();
-            //do some magic to get the proper response
+            if (!_cache.TryGetValue(user+"/tracks", out playlistTracks))
+            {
+                var url = string.Format("playlists/{0}/tracks", playlistTracksRequest.Id);
+                //get tracks from spotify
+                var trackResponse = await _spotifyService.SpotifyApi(playlistTracksRequest.Auth, url, "get");
+
+                //parse the tracks
+                var tracks = _helper.Mapper<PaginatedPlaylistTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
+
+
+                playlistTracks = tracks.items.Select(t => t.Track).ToList();
+                //do some magic to get the proper response
+                _cache.Set(user + "/tracks", playlistTracks);
+            }
+
 
             return playlistTracks;
         }

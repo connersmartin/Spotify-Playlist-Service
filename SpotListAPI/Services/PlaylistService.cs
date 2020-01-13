@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SpotListAPI.Models;
 using SpotListAPI.Services;
@@ -16,14 +17,17 @@ namespace SpotListAPI.Services
         private readonly TrackService _trackService;
         private readonly SpotifyService _spotifyService;
         private readonly Helper _helper;
+        private readonly IMemoryCache _cache;
 
         public PlaylistService (ILogger<PlaylistService> logger,
+                                IMemoryCache cache,
                                 UserService userService ,   
                                 TrackService trackService,
                                 SpotifyService spotifyService,
                                 Helper helper)
         {
             _logger = logger;
+            _cache = cache;
             _userService = userService;
             _trackService = trackService;
             _spotifyService = spotifyService;
@@ -60,37 +64,45 @@ namespace SpotListAPI.Services
         //TODO cache this
         public async Task<List<PlaylistResponse>> GetPlaylists(PlaylistRequest playlistRequest)
         {
-            var url = string.Format("me/playlists");
-            var getPlaylists = new PaginatedPlaylistResponse()
-            {
-                next = ""
-            };
             var playlistList = new List<Playlist>();
-            //deal with pagination
-            while (getPlaylists.next !=null)
+            var user = await _userService.GetUser(playlistRequest.Auth);
+            
+            if(!_cache.TryGetValue(user+"/playlists", out playlistList))
             {
-                var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
-
-                getPlaylists = _helper.Mapper<PaginatedPlaylistResponse>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
-
-                playlistList.AddRange(getPlaylists.items);
-
-                url = string.Format("me/playlists?offset={0}",getPlaylists.limit+getPlaylists.offset); 
-
-            }
-            //Populate tracks in playlist to get length
-            foreach (var playlist in playlistList)
-            {
-                var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
+                var url = string.Format("me/playlists");
+                var getPlaylists = new PaginatedPlaylistResponse()
                 {
-                    Auth = playlistRequest.Auth,
-                    Id = playlist.Id,
-                    UserId = playlist.Owner.Id
-                });
+                    next = ""
+                };
+                //deal with pagination
+                while (getPlaylists.next !=null)
+                {
+                    var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
 
-                playlist.Tracks.items = t.ToArray();
+                    getPlaylists = _helper.Mapper<PaginatedPlaylistResponse>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
 
+                    playlistList.AddRange(getPlaylists.items);
+
+                    url = string.Format("me/playlists?offset={0}",getPlaylists.limit+getPlaylists.offset); 
+
+                }
+                //Populate tracks in playlist to get length
+                foreach (var playlist in playlistList)
+                {
+                    var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
+                    {
+                        Auth = playlistRequest.Auth,
+                        Id = playlist.Id,
+                        UserId = playlist.Owner.Id
+                    });
+
+                    playlist.Tracks.items = t.ToArray();
+
+                }
+
+                _cache.Set(user + "/playlists", playlistList);
             }
+
             return PlaylistToPlaylistResponse(playlistList);
         }
 
