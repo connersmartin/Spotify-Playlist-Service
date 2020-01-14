@@ -62,7 +62,7 @@ namespace SpotListAPI.Services
             var user = await _userService.GetUser(playlistTracksRequest.Auth);
             var playlistTracks = new List<Track>();
 
-            if (!_cache.TryGetValue(user+"/tracks", out playlistTracks))
+            if (!_cache.TryGetValue(user+"/"+ playlistTracksRequest.Id+"/tracks", out playlistTracks))
             {
                 var url = string.Format("playlists/{0}/tracks", playlistTracksRequest.Id);
                 //get tracks from spotify
@@ -74,7 +74,7 @@ namespace SpotListAPI.Services
 
                 playlistTracks = tracks.items.Select(t => t.Track).ToList();
                 //do some magic to get the proper response
-                _cache.Set(user + "/tracks", playlistTracks);
+                _cache.Set(user + "/" + playlistTracksRequest.Id + "/tracks", playlistTracks);
             }
 
 

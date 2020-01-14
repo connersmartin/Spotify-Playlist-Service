@@ -38,6 +38,9 @@ namespace SpotListAPI.Services
         public async Task<PlaylistResponse> CreatePlaylist(PlaylistRequest playlistRequest)
         {
             playlistRequest.UserId = await _userService.GetUser(playlistRequest.Auth);
+            //clear the cache
+            _cache.Remove(playlistRequest.UserId + "/tracks");
+            _cache.Remove(playlistRequest.UserId + "/playlists");
             //create the playlist
             playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
             //add tracks to the playlist
@@ -69,6 +72,7 @@ namespace SpotListAPI.Services
             
             if(!_cache.TryGetValue(user+"/playlists", out playlistList))
             {
+                var playlists = new List<Playlist>();
                 var url = string.Format("me/playlists");
                 var getPlaylists = new PaginatedPlaylistResponse()
                 {
@@ -81,13 +85,13 @@ namespace SpotListAPI.Services
 
                     getPlaylists = _helper.Mapper<PaginatedPlaylistResponse>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
 
-                    playlistList.AddRange(getPlaylists.items);
+                    playlists.AddRange(getPlaylists.items);
 
                     url = string.Format("me/playlists?offset={0}",getPlaylists.limit+getPlaylists.offset); 
 
                 }
                 //Populate tracks in playlist to get length
-                foreach (var playlist in playlistList)
+                foreach (var playlist in playlists)
                 {
                     var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
                     {
@@ -99,8 +103,8 @@ namespace SpotListAPI.Services
                     playlist.Tracks.items = t.ToArray();
 
                 }
-
-                _cache.Set(user + "/playlists", playlistList);
+                playlistList = playlists;
+                _cache.Set(user + "/playlists", playlists);
             }
 
             return PlaylistToPlaylistResponse(playlistList);

@@ -27,6 +27,7 @@ namespace SpotListAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddMemoryCache();
             services.AddSingleton<UserService>();
             services.AddSingleton<SpotifyService>();
             services.AddSingleton<PlaylistService>();
