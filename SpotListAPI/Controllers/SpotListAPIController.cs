@@ -75,12 +75,16 @@ namespace SpotListAPI.Controllers
 
 
         //Potentially not used
-        [HttpPut]
-        [Route("Edit")]
-        public JsonResult UpdatePlaylist([FromBody] PlaylistRequest request)
+        [HttpGet]
+        [Route("Delete")]
+        public JsonResult UpdatePlaylist(string id)
         {
             //Would want to use the unfollow option
-            request.Auth = HttpContext.Request.Headers["auth"];
+            var request = new PlaylistRequest()
+            {
+                Auth = HttpContext.Request.Headers["auth"],
+                Id = id
+            };    
 
             var unfollowResponse = _playlistService.UnfollowPlaylist(request);
             //return successful edit title

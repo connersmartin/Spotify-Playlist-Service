@@ -110,7 +110,7 @@ namespace SpotListAPI.Services
             return PlaylistToPlaylistResponse(playlistList);
         }
 
-        // TODO Create a function to unfollow a playlist (can't delete) esp if the playlist fails at some point
+        //"Deletes" a playlist actually unfollows it
         internal async Task<string> UnfollowPlaylist(PlaylistRequest playlistRequest)
         {
             var user = await _userService.GetUser(playlistRequest.Auth);
