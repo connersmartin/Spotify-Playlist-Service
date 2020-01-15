@@ -96,6 +96,8 @@ namespace SpotListAPI.Services
 
             var getRecommendedTracks = _helper.Mapper<RecommendedTracksResponse>(await getRecommendedTracksResponse.Content.ReadAsByteArrayAsync()).tracks;
 
+            playlistRequest.Length = getRecommendedTracks.Length;
+
             return getRecommendedTracks.ToList();
         }
 
