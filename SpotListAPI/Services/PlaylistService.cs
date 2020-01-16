@@ -99,8 +99,10 @@ namespace SpotListAPI.Services
                         Id = playlist.Id,
                         UserId = playlist.Owner.Id
                     });
-
-                    playlist.Tracks.items = t.ToArray();
+                    if (t != null)
+                    {
+                        playlist.Tracks.items = t.ToArray();
+                    }
 
                 }
                 playlistList = playlists;
@@ -125,13 +127,14 @@ namespace SpotListAPI.Services
             var playlistResponse = new List<PlaylistResponse>();
             foreach (var p in playlists)
             {
-               
+                var len = p.Tracks.items !=null ? p.Tracks.items.Sum(x => x.DurationMs) : 0;
+                var cnt = p.Tracks.items != null ? p.Tracks.items.Length : 0;
                 playlistResponse.Add(new PlaylistResponse
                 {
                     Id=p.Id,
                     Title = p.Name,
-                    Length = p.Tracks.items.Sum(x=>x.DurationMs),
-                    TrackCount = p.Tracks.items.Length
+                    Length = len,
+                    TrackCount = cnt
                 });
             }
             return playlistResponse;

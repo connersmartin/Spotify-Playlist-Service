@@ -39,11 +39,19 @@ namespace SpotListAPI.Controllers
             {
                 Auth = HttpContext.Request.Headers["auth"]
             };
-            
-            var playlists = await _playlistService.GetPlaylists(request);
+            try
+            {
+                var playlists = await _playlistService.GetPlaylists(request);
+
+                return playlists;
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
             
             //return id of playlist and playlist name/length
-            return playlists;
         }
 
         [HttpPost]
@@ -73,8 +81,6 @@ namespace SpotListAPI.Controllers
             return playList;
         }
 
-
-        //Potentially not used
         [HttpGet]
         [Route("Delete")]
         public JsonResult UpdatePlaylist(string id)

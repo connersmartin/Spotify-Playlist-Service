@@ -49,11 +49,9 @@ namespace SpotListAPI.Services
 
             var trackStringJson =JsonSerializer.Serialize(paramDict);
 
-            var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);
+            var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);          
 
-            var addTracks = addTracksResponse.StatusCode.ToString();
-
-            return new PlaylistResponse() { Id = playlistRequest.Id, Length = trackLength, TrackCount = tracks.Count }; 
+            return new PlaylistResponse() { Id = playlistRequest.Id, Length = trackLength, TrackCount = trackList.Count }; 
         }
         //Gets the tracks from a given playlist
         //TODO Cache this
@@ -61,22 +59,38 @@ namespace SpotListAPI.Services
         {
             var user = await _userService.GetUser(playlistTracksRequest.Auth);
             var playlistTracks = new List<Track>();
-
             if (!_cache.TryGetValue(user+"/"+ playlistTracksRequest.Id+"/tracks", out playlistTracks))
             {
+                var playlistTracksList = new List<Track>();
                 var url = string.Format("playlists/{0}/tracks", playlistTracksRequest.Id);
-                //get tracks from spotify
-                var trackResponse = await _spotifyService.SpotifyApi(playlistTracksRequest.Auth, url, "get");
+                var tracks = new PaginatedPlaylistTrackResponse()
+                {
+                    next = ""
+                };
+                while (tracks.next !=null)
+                {
+                    //get tracks from spotify
+                    var trackResponse = await _spotifyService.SpotifyApi(playlistTracksRequest.Auth, url, "get");
+                    Track[] trackArray;
+                    //parse the tracks
+                    tracks = _helper.Mapper<PaginatedPlaylistTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
+                    if (tracks.items.Length>0)
+                    {
+                        trackArray = tracks.items.Select(t => t.Track).ToArray();
+                        playlistTracksList.AddRange(trackArray);
+                    }
 
-                //parse the tracks
-                var tracks = _helper.Mapper<PaginatedPlaylistTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
-
-
-                playlistTracks = tracks.items.Select(t => t.Track).ToList();
+                    if (tracks.limit.HasValue && tracks.offset.HasValue)
+                    {
+                        url = string.Format("playlists/{0}/tracks?offset={1}", playlistTracksRequest.Id, tracks.limit + tracks.offset);
+                    }
+                    
+                }
+                playlistTracks = playlistTracksList;
                 //do some magic to get the proper response
-                _cache.Set(user + "/" + playlistTracksRequest.Id + "/tracks", playlistTracks);
+                _cache.Set(user + "/" + playlistTracksRequest.Id + "/tracks", playlistTracksList);
             }
-
+            
 
             return playlistTracks;
         }
