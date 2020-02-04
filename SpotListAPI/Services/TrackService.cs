@@ -115,6 +115,21 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
+        public async Task GetAudioDataFromTracks(List<Track> tracks)
+        {
+            //break into 100 song chunks
+
+            //get audio features from spotify
+
+            //get genres from the artists
+
+            //need to have a trackaudiofeatures model
+
+            //do some math use std deviation do min/max within 1 std deviation
+
+
+        }
+
         #region Helper Functions
         //Gets artist id from name for use in recommendation
         private async Task<string> SearchArtistFromName(PlaylistRequest playlistRequest)
@@ -148,7 +163,7 @@ namespace SpotListAPI.Services
             if (p.Tempo != null) { paramString += "&target_tempo=" + p.Tempo; }
             if (p.Dance != null) { paramString += "&target_danceability=" + p.Dance; }
             if (p.Energy != null) { paramString += "&target_energy=" + p.Energy; }
-            if (p.Instrumental != null) { paramString += "&target_instrumentalness=" + p.Instrumental; }
+            if (p.Valence != null) { paramString += "&target_valence=" + p.Valence; }
             return paramString;
         }
 
