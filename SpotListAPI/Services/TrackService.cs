@@ -115,19 +115,35 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
-        public async Task GetAudioDataFromTracks(List<Track> tracks)
+        public async Task<Dictionary<string,PlaylistRequest>> GetAudioDataFromTracks(List<Track> tracks)
         {
+            var numTracks = tracks.Count;
+            int chunks = (numTracks + 99) / 100;
             //break into 100 song chunks
+            var trackArray = new List<Track>[chunks];
 
-            //get audio features from spotify
+            for (int i = 0; i < chunks; i++)
+            {
+                trackArray[i] = tracks.Take(100).Skip(i * 100).ToList();
+            }
+
+
+            //get audio features from spotify track ids (max 100 per request)
+            //GET https://api.spotify.com/v1/audio-features?ids=
+
 
             //get genres from the artists
 
+            //Get Spotify artist ids from tracks (max 50 per request)
+            //GET https://api.spotify.com/v1/artists?ids=
+
             //need to have a trackaudiofeatures model
 
-            //do some math use std deviation do min/max within 1 std deviation
+            //do some math use std deviation do min/max within 2 std deviation
+            //"minAudioFeatures" and "maxAudioFeatures" dict
+            //tempo dance energy valence 
 
-
+            return new Dictionary<string, PlaylistRequest>();
         }
 
         #region Helper Functions
