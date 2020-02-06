@@ -31,6 +31,7 @@ namespace SpotListAPI
             services.AddSingleton<UserService>();
             services.AddSingleton<SpotifyService>();
             services.AddSingleton<PlaylistService>();
+            services.AddSingleton<AudioFeaturesService>();
             services.AddSingleton<TrackService>();
             services.AddSingleton<Helper>();
         }
