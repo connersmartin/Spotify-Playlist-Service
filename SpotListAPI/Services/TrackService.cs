@@ -99,12 +99,20 @@ namespace SpotListAPI.Services
         {
             //get a ballpark limit could make this more precise
             var limitRec = playlistRequest.Length / 3;
+            //hard stop at 100 tracks TODO paginate this request at a later date
+            if (limitRec>100)
+            {
+                limitRec = 100;
+            }
+
             var url = string.Format("recommendations?limit={0}&market=from_token&",limitRec.ToString());
+
             if (playlistRequest.Artist != null && playlistRequest.Artist.Trim() !="")
             {
                 playlistRequest.Artist = await SearchArtistFromName(playlistRequest);
             }
-            var parsedParams = GetParsedParams(playlistRequest);
+
+            var parsedParams = !playlistRequest.AudioFeatures ? GetParsedParams(playlistRequest) : GetAudioParsedParams(playlistRequest);
 
             var getRecommendedTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url+parsedParams, "get");
 
@@ -115,80 +123,6 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
-        public async Task<Dictionary<string,PlaylistRequest>> GetAudioDataFromTracks(List<Track> tracks, string auth)
-        {
-            //TODO This can totally be its own helper function "Get X of something"
-
-            var numTracks = tracks.Count;
-            int trackChunks = (numTracks + 99) / 100;
-            //break into 100 song chunks
-            var trackArray = new List<string>[trackChunks];
-
-            for (int i = 0; i < trackChunks; i++)
-            {
-                var intTracks = tracks.Take(100).Skip(i * 100).ToList();
-                trackArray[i] = intTracks.Select(i => i.Id).ToList();
-            }
-
-
-            //get audio features from spotify track ids (max 100 per request)
-            var afUrl = "https://api.spotify.com/v1/audio-features?ids=";
-            var listAudioFeatures = new List<AudioFeatures>();
-            foreach (var t in trackArray)
-            {
-                var ids = string.Join(",", t);
-                var getAudioFeaturesResponse = await _spotifyService.SpotifyApi(auth, afUrl+ids, "get");
-                var getAudioFeatures = _helper.Mapper<AudioFeaturesResponse>(await getAudioFeaturesResponse.Content.ReadAsByteArrayAsync());
-                listAudioFeatures.AddRange(getAudioFeatures.AudioFeatures);
-            }
-
-            //get genres from the artists
-            var artistList = new List<Artist>();
-
-            foreach (var t in tracks)
-            {
-                artistList.AddRange(t.Artists);
-            }
-
-            var artistIds = artistList.Select(a => a.Id).ToList();
-
-            var numArtists = artistIds.Count;
-            int artistChunks = (numArtists + 49) / 50;
-            //break into 100 song chunks
-            var artistArray = new List<string>[artistChunks];
-
-            for (int i = 0; i < artistChunks; i++)
-            {
-                artistArray[i] = artistIds.Take(50).Skip(i * 50).ToList();
-            }
-
-            //Get Spotify artist ids from tracks (max 50 per request)
-            var artistUrl = "https://api.spotify.com/v1/artists?ids=";
-            var fullArtistList = new List<FullArtist>();
-
-            foreach (var a in artistArray)
-            {
-                var ids = string.Join(",", a);
-                var getArtistResponse = await _spotifyService.SpotifyApi(auth, artistUrl + ids, "get");
-                var getArtists = _helper.Mapper<FullArtistsResponse>(await getArtistResponse.Content.ReadAsByteArrayAsync());
-                fullArtistList.AddRange(getArtists.Artists);
-            }
-
-            var genresList = new List<string>();
-
-            foreach (var a in fullArtistList)
-            {
-                genresList.AddRange(a.Genres);
-            }
-
-            //need to have a trackaudiofeatures model
-
-            //do some math use std deviation do min/max within 2 std deviation
-            //"minAudioFeatures" and "maxAudioFeatures" dict
-            //tempo dance energy valence 
-
-            return new Dictionary<string, PlaylistRequest>();
-        }
 
         #region Helper Functions
         //Gets artist id from name for use in recommendation
@@ -224,6 +158,37 @@ namespace SpotListAPI.Services
             if (p.Dance != null) { paramString += "&target_danceability=" + p.Dance; }
             if (p.Energy != null) { paramString += "&target_energy=" + p.Energy; }
             if (p.Valence != null) { paramString += "&target_valence=" + p.Valence; }
+            return paramString;
+        }
+
+        private string GetAudioParsedParams(PlaylistRequest p)
+        {
+            var paramString = "";
+            if (p.Genres.Length > 0) { paramString += "seed_genres=" + string.Join(",", p.Genres).Trim(); };
+            if (p.Tempo != null)
+            {
+                var tempo = float.Parse(p.Tempo);
+                paramString += "&min_tempo=" + (tempo-p.StandardDeviation).ToString();
+                paramString += "&max_tempo=" + (tempo+p.StandardDeviation).ToString();
+            }
+            if (p.Dance != null)
+            {
+                var dance = float.Parse(p.Dance);
+                paramString += "&min_danceability=" + (dance - p.StandardDeviation).ToString();
+                paramString += "&max_danceability=" + (dance + p.StandardDeviation).ToString();
+            }
+            if (p.Energy != null)
+            {
+                var energy = float.Parse(p.Energy);
+                paramString += "&min_energy=" + (energy - p.StandardDeviation).ToString();
+                paramString += "&max_energy=" + (energy + p.StandardDeviation).ToString();
+            }
+            if (p.Valence != null)
+            {
+                var valence = float.Parse(p.Valence);
+                paramString += "&min_valence=" + (valence - p.StandardDeviation).ToString();
+                paramString += "&max_valence=" + (valence + p.StandardDeviation).ToString();
+            }
             return paramString;
         }
 

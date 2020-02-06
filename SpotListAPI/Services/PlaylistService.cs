@@ -16,6 +16,7 @@ namespace SpotListAPI.Services
         private readonly UserService _userService;
         private readonly TrackService _trackService;
         private readonly SpotifyService _spotifyService;
+        private readonly AudioFeaturesService _audioFeaturesService;
         private readonly Helper _helper;
         private readonly IMemoryCache _cache;
 
@@ -24,6 +25,7 @@ namespace SpotListAPI.Services
                                 UserService userService ,   
                                 TrackService trackService,
                                 SpotifyService spotifyService,
+                                AudioFeaturesService audioFeaturesService,
                                 Helper helper)
         {
             _logger = logger;
@@ -31,6 +33,7 @@ namespace SpotListAPI.Services
             _userService = userService;
             _trackService = trackService;
             _spotifyService = spotifyService;
+            _audioFeaturesService = audioFeaturesService;
             _helper = helper;
         }
 
@@ -38,11 +41,29 @@ namespace SpotListAPI.Services
         public async Task<PlaylistResponse> CreatePlaylist(PlaylistRequest playlistRequest)
         {
             playlistRequest.UserId = await _userService.GetUser(playlistRequest.Auth);
+            
+            if (playlistRequest.AudioFeatures)
+            {
+                var tracks = await _trackService.GetTracksFromPlaylist(
+                    new GetPlaylistTracksRequest() { Id = playlistRequest.Id,
+                                                    Auth = playlistRequest.Auth,
+                                                    UserId = playlistRequest.UserId });
+                var audioFeatures = await _audioFeaturesService.GetAudioDataFromTracks(tracks, playlistRequest.Auth);
+
+                playlistRequest.Dance = audioFeatures.Dance;
+                playlistRequest.Energy = audioFeatures.Energy;
+                playlistRequest.Tempo = audioFeatures.Tempo;
+                playlistRequest.Valence = audioFeatures.Valence;
+                playlistRequest.StandardDeviation = audioFeatures.StandardDeviation;
+
+            }
             //clear the cache
             _cache.Remove(playlistRequest.UserId + "/tracks");
             _cache.Remove(playlistRequest.UserId + "/playlists");
             //create the playlist
             playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
+
+
             //add tracks to the playlist
             var addTracksResponse= await _trackService.AddTracksToPlaylist(playlistRequest);
             addTracksResponse.Title = playlistRequest.Name;
