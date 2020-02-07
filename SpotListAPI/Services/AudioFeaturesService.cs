@@ -176,16 +176,11 @@ namespace SpotListAPI.Services
 
         public AudioFeatures GetStandardDeviations(List<AudioFeatures> audioFeatures, AudioFeatures avgAudioFeatures)
         {
-            //I'm not mathing right
-
-            var da = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Danceability - avgAudioFeatures.Danceability), 2) / audioFeatures.Count);
-            var ene = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Energy - avgAudioFeatures.Energy), 2) / audioFeatures.Count);
-            var te = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Tempo - avgAudioFeatures.Tempo), 2) / audioFeatures.Count);
-            var val = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Valence - avgAudioFeatures.Valence), 2) / audioFeatures.Count);
-
-
-
-
+            var da = (float)Math.Sqrt(audioFeatures.Sum(a => Math.Pow(a.Danceability - avgAudioFeatures.Danceability, 2)) / audioFeatures.Count);
+            var ene = (float)Math.Sqrt(audioFeatures.Sum(a => Math.Pow(a.Energy - avgAudioFeatures.Energy, 2)) / audioFeatures.Count);
+            var te = (float)Math.Sqrt(audioFeatures.Sum(a => Math.Pow(a.Tempo - avgAudioFeatures.Tempo, 2)) / audioFeatures.Count);
+            var val = (float)Math.Sqrt(audioFeatures.Sum(a => Math.Pow(a.Valence - avgAudioFeatures.Valence, 2)) / audioFeatures.Count);
+            
             return new AudioFeatures()
             {
                 Danceability = da,

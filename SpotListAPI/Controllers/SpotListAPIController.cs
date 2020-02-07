@@ -77,6 +77,15 @@ namespace SpotListAPI.Controllers
             request.Auth = HttpContext.Request.Headers["auth"];
             
             var playList = await _playlistService.CreatePlaylist(request);
+
+            /*var playList = new PlaylistResponse()
+            {
+                Id = "Test",
+                Length = request.Length,
+                Title = request.Name,
+                TrackCount = 0
+            };*/
+
             //return playlist link
             return playList;
         }
