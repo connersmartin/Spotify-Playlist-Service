@@ -30,7 +30,7 @@ namespace SpotListAPI.Services
             var genres = await GetGenresFromArtists(tracks, auth);
 
             //match those genres with spotify's existing ones
-            var genreList = MatchGenres(genres, auth);
+            var genreList = await MatchGenres(genres, auth);
 
             //calculate and return audio features using standard deviation for now
             var paramData = CalculateAudioFeatures(audioFeatures);
@@ -63,7 +63,7 @@ namespace SpotListAPI.Services
             }
 
             //Get Spotify artist ids from tracks (max 50 per request)
-            var artistUrl = "https://api.spotify.com/v1/artists?ids=";
+            var artistUrl = "artists?ids=";
             var fullArtistList = new List<FullArtist>();
 
             foreach (var a in artistArray)
@@ -80,8 +80,8 @@ namespace SpotListAPI.Services
             {
                 genresList.AddRange(a.Genres);
             }
-
-            return genresList;
+            
+            return genresList.Select(g => g.Replace(" ", "-")).ToList();
         }
 
         private async Task<List<AudioFeatures>> GetAudioFeaturesFromTracks(List<Track> tracks, string auth)
@@ -99,7 +99,7 @@ namespace SpotListAPI.Services
 
 
             //get audio features from spotify track ids (max 100 per request)
-            var afUrl = "https://api.spotify.com/v1/audio-features?ids=";
+            var afUrl = "audio-features?ids=";
             var listAudioFeatures = new List<AudioFeatures>();
             foreach (var t in trackArray)
             {
@@ -113,28 +113,86 @@ namespace SpotListAPI.Services
 
         }
 
-        public void GetGenres()
+        public async Task<List<string>> GetGenres(string auth)
         {
             //Get Genres from spotify
+            var url = "recommendations/available-genre-seeds";
+            var getGenresResponse = await _spotifyService.SpotifyApi(auth, url, "get");
+            var getGenres = _helper.Mapper<Dictionary<string,List<string>>>(await getGenresResponse.Content.ReadAsByteArrayAsync());
+
+            return getGenres["genres"];
+        }
+
+        private async Task<List<string>> MatchGenres(List<string> genres, string auth)
+        {
+            var genreList = new List<string>();
+
+            var spotifyGenres = await GetGenres(auth);
+
+            var availGenres = genres.Intersect(spotifyGenres).ToList();
+                       
+            var topFive = availGenres.GroupBy(g => g)
+                .Select(g => new
+                {
+                    Name = g.Key,
+                    Count = g.Count()
+                }).OrderByDescending(g => g.Count)
+                .ThenBy(g => g.Name).Take(5);
+            
+            foreach(var t in topFive)
+            {
+                genreList.Add(t.Name);
+            }
+
+            return genreList;
         }
 
         private PlaylistRequest CalculateAudioFeatures(List<AudioFeatures> audioFeatures)
         {
-            throw new NotImplementedException();
+            var averages = GetAverages(audioFeatures);
+
+            var stdDeviations = GetStandardDeviations(audioFeatures, averages);
+
+            return new PlaylistRequest()
+            {
+                Dance = averages.Danceability.ToString(),
+                Energy = averages.Energy.ToString(),
+                Tempo = averages.Tempo.ToString(),
+                Valence = averages.Valence.ToString(),
+                StandardDeviation = stdDeviations
+            };
         }
 
-        private List<string> MatchGenres(List<string> genres, string auth)
+        public AudioFeatures GetAverages(List<AudioFeatures> audioFeatures)
         {
-            throw new NotImplementedException();
+            return new AudioFeatures()
+            {
+                Danceability = audioFeatures.Average(a => a.Danceability),
+                Energy = audioFeatures.Average(a => a.Energy),
+                Tempo = audioFeatures.Average(a => a.Tempo),
+                Valence = audioFeatures.Average(a => a.Valence)
+            };
         }
 
-        public void GetAverages()
+        public AudioFeatures GetStandardDeviations(List<AudioFeatures> audioFeatures, AudioFeatures avgAudioFeatures)
         {
+            //I'm not mathing right
 
-        }
+            var da = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Danceability - avgAudioFeatures.Danceability), 2) / audioFeatures.Count);
+            var ene = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Energy - avgAudioFeatures.Energy), 2) / audioFeatures.Count);
+            var te = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Tempo - avgAudioFeatures.Tempo), 2) / audioFeatures.Count);
+            var val = (float)Math.Sqrt(Math.Pow((double)audioFeatures.Sum(a => a.Valence - avgAudioFeatures.Valence), 2) / audioFeatures.Count);
 
-        public void GetStandardDeviations()
-        {
+
+
+
+            return new AudioFeatures()
+            {
+                Danceability = da,
+                Energy = ene,
+                Tempo = te,
+                Valence = val
+            };
 
         }
 

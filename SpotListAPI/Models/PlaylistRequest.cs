@@ -16,6 +16,6 @@ namespace SpotListAPI.Models
         public string Energy { get; set; }
         public string Valence { get; set; }
         public bool AudioFeatures { get; set; }
-        public float StandardDeviation { get; set; }
+        public AudioFeatures StandardDeviation { get; set; }
     }
 }

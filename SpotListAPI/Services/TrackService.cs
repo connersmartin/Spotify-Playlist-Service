@@ -164,30 +164,34 @@ namespace SpotListAPI.Services
         private string GetAudioParsedParams(PlaylistRequest p)
         {
             var paramString = "";
-            if (p.Genres.Length > 0) { paramString += "seed_genres=" + string.Join(",", p.Genres).Trim(); };
+            if (p.Genres.Length > 0) { paramString += "seed_genres=" + string.Join(",", p.Genres).Trim()+"&"; };
             if (p.Tempo != null)
             {
                 var tempo = float.Parse(p.Tempo);
-                paramString += "&min_tempo=" + (tempo-p.StandardDeviation).ToString();
-                paramString += "&max_tempo=" + (tempo+p.StandardDeviation).ToString();
+                paramString += "min_tempo=" + (tempo-p.StandardDeviation.Tempo).ToString();
+                paramString += "&max_tempo=" + (tempo+p.StandardDeviation.Tempo).ToString();
             }
             if (p.Dance != null)
             {
                 var dance = float.Parse(p.Dance);
-                paramString += "&min_danceability=" + (dance - p.StandardDeviation).ToString();
-                paramString += "&max_danceability=" + (dance + p.StandardDeviation).ToString();
+                paramString += "&min_danceability=" + (dance - p.StandardDeviation.Danceability).ToString();
+                paramString += "&max_danceability=" + (dance + p.StandardDeviation.Danceability).ToString();
             }
             if (p.Energy != null)
             {
                 var energy = float.Parse(p.Energy);
-                paramString += "&min_energy=" + (energy - p.StandardDeviation).ToString();
-                paramString += "&max_energy=" + (energy + p.StandardDeviation).ToString();
+                paramString += "&min_energy=" + (energy - p.StandardDeviation.Energy).ToString();
+                paramString += "&max_energy=" + (energy + p.StandardDeviation.Energy).ToString();
             }
             if (p.Valence != null)
             {
                 var valence = float.Parse(p.Valence);
-                paramString += "&min_valence=" + (valence - p.StandardDeviation).ToString();
-                paramString += "&max_valence=" + (valence + p.StandardDeviation).ToString();
+                paramString += "&min_valence=" + (valence - p.StandardDeviation.Valence).ToString();
+                paramString += "&max_valence=" + (valence + p.StandardDeviation.Valence).ToString();
+            }
+            if (paramString.Last()=='&')
+            {
+                paramString = paramString.Substring(0, paramString.Length - 1);
             }
             return paramString;
         }

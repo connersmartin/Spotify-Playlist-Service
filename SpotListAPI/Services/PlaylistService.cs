@@ -55,6 +55,7 @@ namespace SpotListAPI.Services
                 playlistRequest.Tempo = audioFeatures.Tempo;
                 playlistRequest.Valence = audioFeatures.Valence;
                 playlistRequest.StandardDeviation = audioFeatures.StandardDeviation;
+                playlistRequest.Genres = audioFeatures.Genres;
 
             }
             //clear the cache

@@ -23,7 +23,7 @@ namespace SpotListAPI.Services
                     
                     client.BaseAddress = new Uri(baseAddress);
                     var content = new StringContent(param);
-
+                    
                     switch (method.ToLower())
                     {
                         case "get":
