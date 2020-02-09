@@ -128,8 +128,27 @@ namespace SpotListAPI.Services
             var genreList = new List<string>();
 
             var spotifyGenres = await GetGenres(auth);
+            var availGenres = new List<string>();
+            //var availGenres = genres.Intersect(spotifyGenres).ToList();
 
-            var availGenres = genres.Intersect(spotifyGenres).ToList();
+            //find a better way to match genres.
+            //issue is that artist genres are NOT 1:1 with spotify genres
+
+            foreach (var gen in genres)
+            {
+                foreach (var sg in spotifyGenres)
+                {
+                    if (gen==sg)
+                    {
+                        availGenres.Add(sg);
+                    }
+                    else if (gen.Contains(sg))
+                    {
+                        availGenres.Add(sg);
+                    }
+                }
+            }
+
                        
             var topFive = availGenres.GroupBy(g => g)
                 .Select(g => new
