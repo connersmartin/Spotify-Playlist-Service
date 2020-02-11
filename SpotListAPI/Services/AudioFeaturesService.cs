@@ -56,7 +56,7 @@ namespace SpotListAPI.Services
             int artistChunks = (numArtists + 49) / 50;
             //break into 100 song chunks
             var artistArray = new List<string>[artistChunks];
-
+            //doesn't work
             for (int i = 0; i < artistChunks; i++)
             {
                 artistArray[i] = artistIds.Take(50).Skip(i * 50).ToList();
@@ -68,10 +68,13 @@ namespace SpotListAPI.Services
 
             foreach (var a in artistArray)
             {
-                var ids = string.Join(",", a);
-                var getArtistResponse = await _spotifyService.SpotifyApi(auth, artistUrl + ids, "get");
-                var getArtists = _helper.Mapper<FullArtistsResponse>(await getArtistResponse.Content.ReadAsByteArrayAsync());
-                fullArtistList.AddRange(getArtists.Artists);
+                if (a.Count>0)
+                {
+                    var ids = string.Join(",", a);
+                    var getArtistResponse = await _spotifyService.SpotifyApi(auth, artistUrl + ids, "get");
+                    var getArtists = _helper.Mapper<FullArtistsResponse>(await getArtistResponse.Content.ReadAsByteArrayAsync());
+                    fullArtistList.AddRange(getArtists.Artists);
+                }
             }
 
             var genresList = new List<string>();
