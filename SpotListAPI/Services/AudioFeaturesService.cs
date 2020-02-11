@@ -51,22 +51,14 @@ namespace SpotListAPI.Services
             }
 
             var artistIds = artistList.Select(a => a.Id).ToList();
-
-            var numArtists = artistIds.Count;
-            int artistChunks = (numArtists + 49) / 50;
-            //break into 100 song chunks
-            var artistArray = new List<string>[artistChunks];
-            //doesn't work
-            for (int i = 0; i < artistChunks; i++)
-            {
-                artistArray[i] = artistIds.Take(50).Skip(i * 50).ToList();
-            }
+            
+            var artistsList = _helper.ChunkBy(artistIds, 50);
 
             //Get Spotify artist ids from tracks (max 50 per request)
             var artistUrl = "artists?ids=";
             var fullArtistList = new List<FullArtist>();
 
-            foreach (var a in artistArray)
+            foreach (var a in artistsList)
             {
                 if (a.Count>0)
                 {
@@ -89,27 +81,24 @@ namespace SpotListAPI.Services
 
         private async Task<List<AudioFeatures>> GetAudioFeaturesFromTracks(List<Track> tracks, string auth)
         {
-            var numTracks = tracks.Count;
-            int trackChunks = (numTracks + 99) / 100;
-            //break into 100 song chunks
-            var trackArray = new List<string>[trackChunks];
+          
+            var trackIds = tracks.Select(t => t.Id).ToList();
 
-            for (int i = 0; i < trackChunks; i++)
-            {
-                var intTracks = tracks.Take(100).Skip(i * 100).ToList();
-                trackArray[i] = intTracks.Select(i => i.Id).ToList();
-            }
-
+            var trackList = _helper.ChunkBy(trackIds, 100);
 
             //get audio features from spotify track ids (max 100 per request)
             var afUrl = "audio-features?ids=";
             var listAudioFeatures = new List<AudioFeatures>();
-            foreach (var t in trackArray)
+
+            foreach (var t in trackList)
             {
-                var ids = string.Join(",", t);
-                var getAudioFeaturesResponse = await _spotifyService.SpotifyApi(auth, afUrl + ids, "get");
-                var getAudioFeatures = _helper.Mapper<AudioFeaturesResponse>(await getAudioFeaturesResponse.Content.ReadAsByteArrayAsync());
-                listAudioFeatures.AddRange(getAudioFeatures.AudioFeatures);
+                if (t.Count>0)
+                {
+                    var ids = string.Join(",", t);
+                    var getAudioFeaturesResponse = await _spotifyService.SpotifyApi(auth, afUrl + ids, "get");
+                    var getAudioFeatures = _helper.Mapper<AudioFeaturesResponse>(await getAudioFeaturesResponse.Content.ReadAsByteArrayAsync());
+                    listAudioFeatures.AddRange(getAudioFeatures.AudioFeatures);
+                }
             }
 
             return listAudioFeatures;

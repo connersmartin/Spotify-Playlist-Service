@@ -14,6 +14,14 @@ namespace SpotListAPI.Services
         public T Mapper<T>(byte[] json)
         {
             return JsonSerializer.Deserialize<T>(json, null);
-        } 
+        }
+        public List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
+        {
+            return source
+                .Select((x, i) => new { Index = i, Value = x })
+                .GroupBy(x => x.Index / chunkSize)
+                .Select(x => x.Select(v => v.Value).ToList())
+                .ToList();
+        }
     }
 }
