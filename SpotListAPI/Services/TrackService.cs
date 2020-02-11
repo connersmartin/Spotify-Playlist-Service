@@ -25,6 +25,7 @@ namespace SpotListAPI.Services
         //add tracks to playlist
         public async Task<PlaylistResponse> AddTracksToPlaylist(PlaylistRequest playlistRequest)
         {
+            //Refactor to allow 100 request max mainly for saved tracks playlist creation
             var paramDict = new Dictionary<string, string[]>();
             var url = string.Format("playlists/{0}/tracks",playlistRequest.Id);
             //get the recomendations
@@ -124,6 +125,11 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
+        public async Task<List<Track>> GetSavedTracks(PlaylistRequest playlistRequest)
+        {
+
+            return new List<Track>();
+        }
 
         #region Helper Functions
         //Gets artist id from name for use in recommendation
