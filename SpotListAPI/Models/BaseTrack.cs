@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace SpotListAPI.Models
 {
-    public class Track : BaseSpotifyObject
+    public class BaseTrack:BaseSpotifyObject
     {
+       
         [JsonPropertyName("available_markets")]
         public string[] AvailableMarkets { get; set; }
         [JsonPropertyName("disc_number")]
@@ -17,7 +15,7 @@ namespace SpotListAPI.Models
         [JsonPropertyName("explicit")]
         public bool Explicit { get; set; }
         [JsonPropertyName("external_ids")]
-        public Dictionary<string, string> ExternalIds { get; set; }
+        public Dictionary<string,string> ExternalIds { get; set; }
         [JsonPropertyName("name")]
         public string Name { get; set; }
         [JsonPropertyName("popularity")]
@@ -28,16 +26,6 @@ namespace SpotListAPI.Models
         public int TrackNumber { get; set; }
         [JsonPropertyName("is_local")]
         public bool IsLocal { get; set; }
-
-        [JsonPropertyName("album")]
-        public Album Album { get; set; }
-        [JsonPropertyName("artists")]
-        public Artist[] Artists { get; set; }
-        [JsonPropertyName("is_playable")]
-        public bool IsPlayable { get; set; }
-        [JsonPropertyName("linked_from")]
-        public BaseSpotifyObject LinkedFrom { get; set; }
-        [JsonPropertyName("restrictions")]
-        public Dictionary<string, string> Restrictions { get; set; }
     }
+
 }

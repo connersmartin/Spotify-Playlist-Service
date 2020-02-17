@@ -27,30 +27,46 @@ namespace SpotListAPI.Services
         {
             //Refactor to allow 100 request max mainly for saved tracks playlist creation
             var paramDict = new Dictionary<string, string[]>();
-            var url = string.Format("playlists/{0}/tracks",playlistRequest.Id);
-            //get the recomendations
-            var tracks = await GetRecommendedTracks(playlistRequest);
-            //add the tracks
-            var trackLength = 0;
+            var tracks = new List<Track>();
             var trackList = new List<string>();
-            foreach (var t in tracks)
+            var trackLength = 0;
+            var url = string.Format("playlists/{0}/tracks",playlistRequest.Id);
+
+            //if not getting the saved tracks get recommendations
+            if (!playlistRequest.SavedTracks)
             {
-                if (trackLength <= playlistRequest.Length * 60000)
+                //get the recomendations
+                tracks = await GetRecommendedTracks(playlistRequest);
+                //add the tracks           
+                
+                foreach (var t in tracks)
                 {
-                    trackLength += t.DurationMs;
-                    trackList.Add(t.Uri);
-                }
-                else
-                {
-                    break;
+                    if (trackLength <= playlistRequest.Length * 60000)
+                    {
+                        trackLength += t.DurationMs;
+                        trackList.Add(t.Uri);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
-    
-            paramDict.Add("uris", trackList.ToArray());
+            else
+            {
+                trackList = await GetSavedTracks(playlistRequest);
+            }
 
-            var trackStringJson =JsonSerializer.Serialize(paramDict);
+            var chunkTracks = _helper.ChunkBy<string>(trackList, 100);
+            foreach (var chunk in chunkTracks)
+            {
+                paramDict.Clear();
+                paramDict.Add("uris", trackList.ToArray());
 
-            var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);          
+                var trackStringJson =JsonSerializer.Serialize(paramDict);
+
+                var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);   
+            }
 
             return new PlaylistResponse() { Id = playlistRequest.Id, Length = trackLength, TrackCount = trackList.Count }; 
         }
@@ -125,11 +141,47 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
-        public async Task<List<Track>> GetSavedTracks(PlaylistRequest playlistRequest)
+        public async Task<List<string>> GetSavedTracks(PlaylistRequest playlistRequest)
         {
+            var user = await _userService.GetUser(playlistRequest.Auth);
 
-            return new List<Track>();
+            var url = "me/tracks";
+            var savedTracksList = new List<SavedTrack>();
+            var tracks = new PaginatedSavedTrackResponse()
+            {
+                next = ""
+            };
+            while (tracks.next != null)
+            {
+                //get tracks from spotify
+                var trackResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+                SavedTrack[] trackArray;
+                //parse the tracks
+
+                //BUG This isn't deserializing properly
+                var why = await trackResponse.Content.ReadAsStringAsync();
+                tracks = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
+                if (tracks.items.Length > 0)
+                {
+                    trackArray = tracks.items.Select(t => t.Track).ToArray();
+                    savedTracksList.AddRange(trackArray);
+                }
+
+                if (tracks.limit.HasValue && tracks.offset.HasValue)
+                {
+                    url = string.Format("me/tracks?offset={1}", playlistRequest.Id, tracks.limit + tracks.offset);
+                }
+
+            }
+            _cache.Set(user + "/" + playlistRequest.Id + "/tracks",playlistRequest);
+
+            var savedUris = savedTracksList.Select(s => s.Id).ToList();
+
+
+            return savedUris;
         }
+
+        
 
         #region Helper Functions
         //Gets artist id from name for use in recommendation

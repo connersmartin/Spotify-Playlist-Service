@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace SpotListAPI.Models
 {
-    public class Artist:BaseSpotifyObject
+    public class BaseArtist:BaseSpotifyObject
     {
-        [JsonPropertyName("followers")]
-        public Follower Followers { get; set; }
         [JsonPropertyName("name")]
         public string Name { get; set; }
+
     }
+
 }

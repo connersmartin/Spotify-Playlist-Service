@@ -42,6 +42,7 @@ namespace SpotListAPI.Services
         {
             playlistRequest.UserId = await _userService.GetUser(playlistRequest.Auth);
             
+            //Get audio features from specific playlist and use that information
             if (playlistRequest.AudioFeatures)
             {
                 var tracks = await _trackService.GetTracksFromPlaylist(
@@ -58,6 +59,12 @@ namespace SpotListAPI.Services
                 playlistRequest.Genres = audioFeatures.Genres;
 
             }
+
+            if (playlistRequest.SavedTracks)
+            {
+                playlistRequest.Name = playlistRequest.UserId + " Saved Tracks";
+            }
+
             //clear the cache
             _cache.Remove(playlistRequest.UserId + "/tracks");
             _cache.Remove(playlistRequest.UserId + "/playlists");
