@@ -9,6 +9,6 @@ namespace SpotListAPI.Models
     public class PaginatedSavedTrackResponse:BasePaginatedObject
     {
         [JsonProperty("items")]
-        public SavedTrackResponse[] items { get; set; }
+        public SavedTrackResponse[] Items { get; set; }
     }
 }

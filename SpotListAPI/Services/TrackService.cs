@@ -160,10 +160,22 @@ namespace SpotListAPI.Services
 
                 //BUG This isn't deserializing properly
                 var why = await trackResponse.Content.ReadAsStringAsync();
-                tracks = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
-                if (tracks.items.Length > 0)
+                var tracksA = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
+
+                try
                 {
-                    trackArray = tracks.items.Select(t => t.Track).ToArray();
+                    tracks = JsonSerializer.Deserialize<PaginatedSavedTrackResponse>(why,null);
+
+                }
+                catch (Exception ex)
+                {
+
+                    throw;
+                }
+
+                if (tracks.Items.Length > 0)
+                {
+                    trackArray = tracks.Items.Select(t => t.Track).ToArray();
                     savedTracksList.AddRange(trackArray);
                 }
 
