@@ -9,7 +9,7 @@ namespace SpotListAPI.Models
     public class SavedTrackResponse
     {
         [JsonProperty("added_at")]
-        public DateTimeOffset AddedAt { get; set; }
+        public DateTime AddedAt { get; set; }
         [JsonProperty("track")]
         public SavedTrack Track { get; set; }
 

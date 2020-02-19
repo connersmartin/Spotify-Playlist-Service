@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json;
 using SpotListAPI.Models;
 
 namespace SpotListAPI.Services
@@ -56,14 +57,14 @@ namespace SpotListAPI.Services
             {
                 trackList = await GetSavedTracks(playlistRequest);
             }
-
+            //breaks up the list so we can add tracks
             var chunkTracks = _helper.ChunkBy<string>(trackList, 100);
             foreach (var chunk in chunkTracks)
             {
                 paramDict.Clear();
-                paramDict.Add("uris", trackList.ToArray());
+                paramDict.Add("uris", chunk.ToArray());
 
-                var trackStringJson =JsonSerializer.Serialize(paramDict);
+                var trackStringJson =System.Text.Json.JsonSerializer.Serialize(paramDict);
 
                 var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);   
             }
@@ -160,22 +161,13 @@ namespace SpotListAPI.Services
 
                 //BUG This isn't deserializing properly
                 var why = await trackResponse.Content.ReadAsStringAsync();
-                var tracksA = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
+                var tracksA = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());               
+                //I don't know why, but this works 9not the line above)
+                tracks = JsonConvert.DeserializeObject<PaginatedSavedTrackResponse>(why);
 
-                try
+                if (tracks.items.Length > 0)
                 {
-                    tracks = JsonSerializer.Deserialize<PaginatedSavedTrackResponse>(why,null);
-
-                }
-                catch (Exception ex)
-                {
-
-                    throw;
-                }
-
-                if (tracks.Items.Length > 0)
-                {
-                    trackArray = tracks.Items.Select(t => t.Track).ToArray();
+                    trackArray = tracks.items.Select(t => t.Track).ToArray();
                     savedTracksList.AddRange(trackArray);
                 }
 
@@ -187,7 +179,7 @@ namespace SpotListAPI.Services
             }
             _cache.Set(user + "/" + playlistRequest.Id + "/tracks",playlistRequest);
 
-            var savedUris = savedTracksList.Select(s => s.Id).ToList();
+            var savedUris = savedTracksList.Select(s => s.Uri).ToList();
 
 
             return savedUris;
