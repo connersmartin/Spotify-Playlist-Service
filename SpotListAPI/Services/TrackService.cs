@@ -53,7 +53,7 @@ namespace SpotListAPI.Services
                     }
                 }
             }
-            else
+            else // Only getting users saved tracks
             {
                 trackList = await GetSavedTracks(playlistRequest);
             }
@@ -64,7 +64,7 @@ namespace SpotListAPI.Services
                 paramDict.Clear();
                 paramDict.Add("uris", chunk.ToArray());
 
-                var trackStringJson =System.Text.Json.JsonSerializer.Serialize(paramDict);
+                var trackStringJson = System.Text.Json.JsonSerializer.Serialize(paramDict);
 
                 var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);   
             }
@@ -129,7 +129,7 @@ namespace SpotListAPI.Services
             {
                 playlistRequest.Artist = await SearchArtistFromName(playlistRequest);
             }
-
+            //Either using target (getparsed) or min/max values (getaudioparsed)
             var parsedParams = !playlistRequest.AudioFeatures ? GetParsedParams(playlistRequest) : GetAudioParsedParams(playlistRequest);
 
             var getRecommendedTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url+parsedParams, "get");
@@ -162,7 +162,7 @@ namespace SpotListAPI.Services
                 //BUG This isn't deserializing properly
                 var why = await trackResponse.Content.ReadAsStringAsync();
                 var tracksA = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());               
-                //I don't know why, but this works 9not the line above)
+                //I don't know why, but this works (not the line above)
                 tracks = JsonConvert.DeserializeObject<PaginatedSavedTrackResponse>(why);
 
                 if (tracks.items.Length > 0)
@@ -180,7 +180,6 @@ namespace SpotListAPI.Services
             _cache.Set(user + "/" + playlistRequest.Id + "/tracks",playlistRequest);
 
             var savedUris = savedTracksList.Select(s => s.Uri).ToList();
-
 
             return savedUris;
         }
