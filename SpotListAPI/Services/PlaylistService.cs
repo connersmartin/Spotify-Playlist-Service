@@ -68,7 +68,13 @@ namespace SpotListAPI.Services
             //clear the cache
             _cache.Remove(playlistRequest.UserId + "/tracks");
             _cache.Remove(playlistRequest.UserId + "/playlists");
-            //create the playlist
+            
+            //get the existing or create the playlist
+            //call mongo provider
+                //Make sure playlist still exists
+                //make sure user follows it
+                //else follow it and update it
+            //if nothing exists
             playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
 
 

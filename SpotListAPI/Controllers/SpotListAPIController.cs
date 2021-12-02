@@ -9,6 +9,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
 using SpotListAPI.Models;
+using SpotListAPI.Provider;
+using SpotListAPI.Provider.Models;
 
 namespace SpotListAPI.Controllers
 {
@@ -20,14 +22,35 @@ namespace SpotListAPI.Controllers
         private readonly ILogger<SpotListAPIController> _logger;
         private readonly PlaylistService _playlistService;
         private readonly TrackService _trackService;
+        private readonly MongoProvider _db;
 
         public SpotListAPIController(ILogger<SpotListAPIController> logger,
                                     PlaylistService playlistService,
-                                    TrackService trackService)
+                                    TrackService trackService,
+                                    MongoProvider db)
         {
             _logger = logger;
             _playlistService = playlistService;
             _trackService = trackService;
+            _db = db;
+        }
+
+        [HttpGet]
+        [Route("db")]
+        public async Task TestDb()
+        {
+            //testing functionality
+            var x = await _db.GetAll<playlists>("playlists");
+
+            var b = await _db.GetOne<playlists>("playlists", "61a47031c61b8f41c7a2a809");
+
+            var a = new
+            {
+                playListId = "test2",
+                userId = "user2"
+            };
+
+            await _db.Add("playlists", a);
         }
 
         [HttpGet]
