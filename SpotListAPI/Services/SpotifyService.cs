@@ -35,8 +35,22 @@ namespace SpotListAPI.Services
                             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                             return await client.PutAsync(url, content);
                         case "delete":
-                            return await client.DeleteAsync(baseAddress + url);
+                            if (param == "")
+                            {
+                                return await client.DeleteAsync(baseAddress + url);
+                            }
+                            else
+                            {
+                                HttpRequestMessage request = new()
+                                {
+                                    Content = content,
+                                    Method = HttpMethod.Delete,
+                                    RequestUri = new Uri(baseAddress + url)
+                                };
+                                return await client.SendAsync(request);
+                            }
                     }
+
                 }
                 return new HttpResponseMessage() { StatusCode = HttpStatusCode.NoContent };
             }

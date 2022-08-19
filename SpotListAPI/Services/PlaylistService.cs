@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SpotListAPI.Models;
+using SpotListAPI.Provider;
+using SpotListAPI.Provider.Models;
 using SpotListAPI.Services;
 
 namespace SpotListAPI.Services
@@ -19,6 +21,7 @@ namespace SpotListAPI.Services
         private readonly AudioFeaturesService _audioFeaturesService;
         private readonly Helper _helper;
         private readonly IMemoryCache _cache;
+        private readonly MongoProvider _mongoProvider;
 
         public PlaylistService (ILogger<PlaylistService> logger,
                                 IMemoryCache cache,
@@ -26,7 +29,8 @@ namespace SpotListAPI.Services
                                 TrackService trackService,
                                 SpotifyService spotifyService,
                                 AudioFeaturesService audioFeaturesService,
-                                Helper helper)
+                                Helper helper,
+                                MongoProvider mongoProvider)
         {
             _logger = logger;
             _cache = cache;
@@ -35,6 +39,7 @@ namespace SpotListAPI.Services
             _spotifyService = spotifyService;
             _audioFeaturesService = audioFeaturesService;
             _helper = helper;
+            _mongoProvider = mongoProvider;
         }
 
         //create/list playlist url users/{user_id}/playlists
@@ -68,20 +73,50 @@ namespace SpotListAPI.Services
             //clear the cache
             _cache.Remove(playlistRequest.UserId + "/tracks");
             _cache.Remove(playlistRequest.UserId + "/playlists");
-            
-            //get the existing or create the playlist
-            //call mongo provider
-                //Make sure playlist still exists
-                //make sure user follows it
-                //else follow it and update it
-            //if nothing exists
-            playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
 
+            var likedPlaylistExists = await _mongoProvider.GetOne<playlists>("playlists", playlistRequest.UserId);
+
+            var likedPlaylist = likedPlaylistExists.FirstOrDefault();
+            var playlistUrl = "";
+            var likedExists = false;
+            if (likedPlaylist != null)
+            {
+                playlistUrl = "playlists/" + likedPlaylist.playListId;
+
+                //Make sure playlist still exists
+                var liked = await _spotifyService.SpotifyApi(playlistRequest.Auth, playlistUrl, "get");
+                if (liked.IsSuccessStatusCode)
+                {
+                    likedExists = true;
+                }
+            }
+
+            if (likedPlaylistExists.Count == 0 || !likedExists)
+            {
+                playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
+
+                var mongoObject = new 
+                {
+                    playListId = playlistRequest.Id,
+                    userId = playlistRequest.UserId
+                };
+
+                var jsonMongo = JsonSerializer.Serialize(mongoObject);
+
+                await _mongoProvider.Add("playlists", jsonMongo);
+            }
+            else
+            {
+                playlistRequest.Id = likedPlaylist.playListId;
+
+                var follow = await _spotifyService.SpotifyApi(playlistRequest.Auth, playlistUrl+"/followers", "put");
+            }      
 
             //add tracks to the playlist
-            var addTracksResponse= await _trackService.AddTracksToPlaylist(playlistRequest);
+            var addTracksResponse = await _trackService.AddTracksToPlaylist(playlistRequest);
             addTracksResponse.Title = playlistRequest.Name;
             return addTracksResponse;
+
         }
         
         //Add blank playlist to be filled

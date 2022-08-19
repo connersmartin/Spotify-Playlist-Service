@@ -30,7 +30,11 @@ namespace SpotListAPI.Services
             var paramDict = new Dictionary<string, string[]>();
             var tracks = new List<Track>();
             var trackList = new List<string>();
+            var existingTracks = new List<string>();
+            var tracksToRemove = new List<string>();
+            var tracksToAdd = new List<string>();
             var trackLength = 0;
+            //can add a position here
             var url = string.Format("playlists/{0}/tracks",playlistRequest.Id);
 
             //if not getting the saved tracks get recommendations
@@ -52,21 +56,56 @@ namespace SpotListAPI.Services
                         break;
                     }
                 }
+
+                tracksToAdd = trackList;
             }
             else // Only getting users saved tracks
             {
+                //tracks on existing playlist
+                existingTracks = await GetSavedTracksRefresh(playlistRequest);
+
+                //tracks on current playlist
                 trackList = await GetSavedTracks(playlistRequest);
+
+                //tracks on existing not on current
+                tracksToRemove = existingTracks.Where(e => !trackList.Contains(e)).ToList();
+
+                //tracks on current not on existing
+                tracksToAdd = trackList.Where(e => !existingTracks.Contains(e)).ToList();
             }
             //breaks up the list so we can add tracks
-            var chunkTracks = _helper.ChunkBy<string>(trackList, 100);
-            foreach (var chunk in chunkTracks)
+            
+            if (tracksToAdd.Any())
             {
-                paramDict.Clear();
-                paramDict.Add("uris", chunk.ToArray());
+                var chunkTracks = _helper.ChunkBy<string>(tracksToAdd, 100);
+                foreach (var chunk in chunkTracks)
+                {
+                    paramDict.Clear();
 
-                var trackStringJson = System.Text.Json.JsonSerializer.Serialize(paramDict);
+                    paramDict.Add("uris", chunk.ToArray());
 
-                var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);   
+                    var trackStringJson = System.Text.Json.JsonSerializer.Serialize(paramDict);
+
+                    var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "post", trackStringJson);   
+                }
+
+            }
+            
+            if (tracksToRemove.Any())
+            {
+                var chunkTracks = _helper.ChunkBy<string>(tracksToRemove, 100);
+                foreach (var chunk in chunkTracks)
+                {
+                    var objParamDict = new Dictionary<string, object[]>();
+                    var objs = new List<object>();
+                    chunk.ForEach(c => objs.Add(new { uri = c }));
+                    objParamDict.Add("tracks", objs.ToArray());
+
+                    var trackStringJson = System.Text.Json.JsonSerializer.Serialize(objParamDict);
+
+                    var addTracksResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "delete", trackStringJson);   
+                }
+
             }
 
             return new PlaylistResponse() { Id = playlistRequest.Id, Length = trackLength, TrackCount = trackList.Count }; 
@@ -177,14 +216,56 @@ namespace SpotListAPI.Services
                 }
 
             }
-            _cache.Set(user + "/" + playlistRequest.Id + "/tracks",playlistRequest);
+            //_cache.Set(user + "/" + playlistRequest.Id + "/tracks",playlistRequest);
+            savedTracksList = savedTracksList.OrderByDescending(s => s.AddedAt).ToList();
 
             var savedUris = savedTracksList.Select(s => s.Uri).ToList();
 
             return savedUris;
         }
 
-        
+        public async Task<List<string>> GetSavedTracksRefresh(PlaylistRequest playlistRequest)
+        {
+            var user = await _userService.GetUser(playlistRequest.Auth);
+
+            var url = string.Format("playlists/{0}/tracks", playlistRequest.Id);
+            var savedTracksList = new List<SavedTrack>();
+            var tracks = new PaginatedSavedTrackResponse()
+            {
+                next = ""
+            };
+            while (tracks.next != null)
+            {
+                //get tracks from spotify
+                var trackResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+                SavedTrack[] trackArray;
+                //parse the tracks
+
+                //BUG This isn't deserializing properly
+                var why = await trackResponse.Content.ReadAsStringAsync();
+                var tracksA = _helper.Mapper<PaginatedSavedTrackResponse>(await trackResponse.Content.ReadAsByteArrayAsync());
+                //I don't know why, but this works (not the line above)
+                tracks = JsonConvert.DeserializeObject<PaginatedSavedTrackResponse>(why);
+
+                if (tracks.items.Length > 0)
+                {
+                    trackArray = tracks.items.Select(t => t.Track).ToArray();
+                    savedTracksList.AddRange(trackArray);
+                }
+
+                if (tracks.limit.HasValue && tracks.offset.HasValue)
+                {
+                    url = string.Format("playlists/{0}/tracks?offset={1}", playlistRequest.Id, tracks.limit + tracks.offset);
+                }
+
+            }
+
+            var savedUris = savedTracksList.Select(s => s.Uri).ToList();
+
+            return savedUris;
+        }
+
+
 
         #region Helper Functions
         //Gets artist id from name for use in recommendation

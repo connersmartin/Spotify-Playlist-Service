@@ -10,6 +10,8 @@ namespace SpotListAPI.Models
     {
         [JsonPropertyName("album")]
         public TrackAlbum Album { get; set; }
+        [JsonPropertyName("added_at")]
+        public DateTime AddedAt { get; set; }
         [JsonPropertyName("artists")]
         public BaseArtist[] Artists { get; set; }
         [JsonPropertyName("available_markets")]
