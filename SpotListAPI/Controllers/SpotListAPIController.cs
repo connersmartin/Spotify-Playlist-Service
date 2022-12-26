@@ -32,18 +32,29 @@ namespace SpotListAPI.Controllers
 
         [HttpGet]
         [Route("Playlist")]
-        public async Task<List<PlaylistResponse>> GetPlaylists()
+        public async Task<List<PlaylistResponse>> GetPlaylists(string id = null)
         {
             //cache this
             var request = new PlaylistRequest()
             {
-                Auth = HttpContext.Request.Headers["auth"]
+                Auth = HttpContext.Request.Headers["auth"],
+                UpdateTracks = true,
+                Id = id
             };
             try
             {
-                var playlists = await _playlistService.GetPlaylists(request);
+                if (id != null)
+                {
+                    var playlist = await _playlistService.GetPlaylist(request);
 
-                return playlists;
+                    return playlist;
+                }
+                else
+                {
+                    var playlists = await _playlistService.GetPlaylists(request);
+
+                    return playlists;
+                }
             }
             catch (Exception ex)
             {
@@ -90,9 +101,44 @@ namespace SpotListAPI.Controllers
             return playList;
         }
 
+        [HttpPost]
+        [Route("Update")]
+        public async Task<JsonResult> UpdateSavedTracksPlaylist(string id)
+        {
+            //Would want to use the unfollow option
+            var request = new PlaylistRequest()
+            {
+                Auth = HttpContext.Request.Headers["auth"],
+                Id = id,
+                UpdateTracks = true,
+                SavedTracks = true
+            };
+
+            var response = await _playlistService.UpdatePlaylist(request);
+            //return successful edit title
+            return new JsonResult(response.TrackCount);
+        } 
+        
+        [Route("Copy")]
+        public async Task<JsonResult> CopyTracksPlaylist(string id)
+        {
+            //Would want to use the unfollow option
+            var request = new PlaylistRequest()
+            {
+                Auth = HttpContext.Request.Headers["auth"],
+                Id = id,
+                UpdateTracks = true,
+                SavedTracks = true
+            };
+
+            var response = await _playlistService.CopyPlaylist(request);
+            //return successful edit title
+            return new JsonResult(response);
+        }
+
         [HttpGet]
         [Route("Delete")]
-        public JsonResult UpdatePlaylist(string id)
+        public JsonResult DeletePlaylist(string id)
         {
             //Would want to use the unfollow option
             var request = new PlaylistRequest()

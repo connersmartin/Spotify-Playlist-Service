@@ -20,7 +20,7 @@ namespace SpotListAPI.Services
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("Authorization", "Bearer "+ auth);
-                    
+                    client.Timeout = new TimeSpan(1,0,0);
                     client.BaseAddress = new Uri(baseAddress);
                     var content = new StringContent(param);
                     

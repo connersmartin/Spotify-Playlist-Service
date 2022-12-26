@@ -24,7 +24,7 @@ namespace SpotListAPI.Services
         }
 
         //add tracks to playlist
-        public async Task<PlaylistResponse> AddTracksToPlaylist(PlaylistRequest playlistRequest)
+        public async Task<PlaylistResponse> AddTracksToPlaylist(PlaylistRequest playlistRequest, bool copy=false)
         {
             //Refactor to allow 100 request max mainly for saved tracks playlist creation
             var paramDict = new Dictionary<string, string[]>();
@@ -34,7 +34,7 @@ namespace SpotListAPI.Services
             var url = string.Format("playlists/{0}/tracks",playlistRequest.Id);
 
             //if not getting the saved tracks get recommendations
-            if (!playlistRequest.SavedTracks)
+            if (!playlistRequest.SavedTracks && !copy)
             {
                 //get the recomendations
                 tracks = await GetRecommendedTracks(playlistRequest);
@@ -53,15 +53,23 @@ namespace SpotListAPI.Services
                     }
                 }
             }
+            else if (playlistRequest.UpdateTracks && !copy)
+            {
+                trackList = playlistRequest.TrackIds.ToList();
+            }
             else // Only getting users saved tracks
             {
-                trackList = await GetSavedTracks(playlistRequest);
+                trackList = await GetSavedTracks(playlistRequest, copy);
             }
             //breaks up the list so we can add tracks
             var chunkTracks = _helper.ChunkBy<string>(trackList, 100);
             foreach (var chunk in chunkTracks)
             {
                 paramDict.Clear();
+                if (playlistRequest.UpdateTracks)
+                {
+                    url += "?position=0";
+                }
                 paramDict.Add("uris", chunk.ToArray());
 
                 var trackStringJson = System.Text.Json.JsonSerializer.Serialize(paramDict);
@@ -142,11 +150,15 @@ namespace SpotListAPI.Services
             return getRecommendedTracks.ToList();
         }
 
-        public async Task<List<string>> GetSavedTracks(PlaylistRequest playlistRequest)
+        public async Task<List<string>> GetSavedTracks(PlaylistRequest playlistRequest, bool copy=false)
         {
             var user = await _userService.GetUser(playlistRequest.Auth);
-
             var url = "me/tracks";
+            if (copy)
+            {
+                url = string.Format("playlists/{0}/tracks", playlistRequest.OldPlaylistId);
+
+            }
             var savedTracksList = new List<SavedTrack>();
             var tracks = new PaginatedSavedTrackResponse()
             {
@@ -174,6 +186,11 @@ namespace SpotListAPI.Services
                 if (tracks.limit.HasValue && tracks.offset.HasValue)
                 {
                     url = string.Format("me/tracks?offset={1}", playlistRequest.Id, tracks.limit + tracks.offset);
+                    if (copy)
+                    {
+                        url = string.Format("playlists/{0}/tracks?offset={1}", playlistRequest.OldPlaylistId, tracks.limit + tracks.offset);
+
+                    }
                 }
 
             }

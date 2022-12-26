@@ -37,6 +37,31 @@ namespace SpotListAPI.Services
             _helper = helper;
         }
 
+        public async Task<PlaylistResponse> CopyPlaylist(PlaylistRequest playlistRequest)
+        {
+            playlistRequest.UserId = await _userService.GetUser(playlistRequest.Auth);
+
+            var p = await GetPlaylists(playlistRequest);
+            var name = p.Where(a => a.Id == playlistRequest.Id).First().Title;
+
+                playlistRequest.Name = "Copy of " + name;
+       
+
+            //clear the cache
+            _cache.Remove(playlistRequest.UserId + "/tracks");
+            _cache.Remove(playlistRequest.UserId + "/playlists");
+            //create the playlist
+            playlistRequest.OldPlaylistId = playlistRequest.Id;
+            playlistRequest.Id = await AddBlankPlaylist(playlistRequest);
+
+
+            //add tracks to the playlist
+            var addTracksResponse = await _trackService.AddTracksToPlaylist(playlistRequest, true);
+            addTracksResponse.Title = playlistRequest.Name;
+            return addTracksResponse;
+        }
+
+
         //create/list playlist url users/{user_id}/playlists
         public async Task<PlaylistResponse> CreatePlaylist(PlaylistRequest playlistRequest)
         {
@@ -94,12 +119,40 @@ namespace SpotListAPI.Services
 
         //Get user's playlists
         //TODO cache this
+        public async Task<List<PlaylistResponse>> GetPlaylist(PlaylistRequest playlistRequest)
+        {
+            var playlistList = new List<Playlist>();
+            var user = await _userService.GetUser(playlistRequest.Auth);
+            _cache.Remove(user + "/playlists");
+
+            if (!_cache.TryGetValue(user+"/playlists", out playlistList))
+            {
+                var playlists = new List<Playlist>();
+                var url = string.Format($"playlists/{playlistRequest.Id}");
+              
+                 var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+
+                    var getPlaylist = _helper.Mapper<Playlist>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
+
+                    playlists.Add(getPlaylist);
+
+
+               
+                playlistList = playlists;
+            }
+
+            return PlaylistToPlaylistResponse(playlistList);
+        }
+        
+        //Get user's playlists
+        //TODO cache this
         public async Task<List<PlaylistResponse>> GetPlaylists(PlaylistRequest playlistRequest)
         {
             var playlistList = new List<Playlist>();
             var user = await _userService.GetUser(playlistRequest.Auth);
-            
-            if(!_cache.TryGetValue(user+"/playlists", out playlistList))
+            _cache.Remove(user + "/playlists");
+
+            if (!_cache.TryGetValue(user+"/playlists", out playlistList))
             {
                 var playlists = new List<Playlist>();
                 var url = string.Format("me/playlists");
@@ -120,17 +173,21 @@ namespace SpotListAPI.Services
 
                 }
                 //Populate tracks in playlist to get length
-                foreach (var playlist in playlists)
+                if (!playlistRequest.UpdateTracks)
                 {
-                    var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
+                    foreach (var playlist in playlists)
                     {
-                        Auth = playlistRequest.Auth,
-                        Id = playlist.Id,
-                        UserId = playlist.Owner.Id
-                    });
-                    if (t != null)
-                    {
-                        playlist.Tracks.items = t.ToArray();
+                        var t = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest()
+                        {
+                            Auth = playlistRequest.Auth,
+                            Id = playlist.Id,
+                            UserId = playlist.Owner.Id
+                        });
+                        if (t != null)
+                        {
+                            playlist.Tracks.items = t.ToArray();
+                        }
+
                     }
 
                 }
@@ -139,6 +196,29 @@ namespace SpotListAPI.Services
             }
 
             return PlaylistToPlaylistResponse(playlistList);
+        }
+
+        //updates a given playlist with your saved tracks
+        public async Task<PlaylistResponse> UpdatePlaylist(PlaylistRequest playlistRequest)
+        {
+            playlistRequest.UserId = await _userService.GetUser(playlistRequest.Auth);            
+
+            //clear the cache
+            _cache.Remove(playlistRequest.UserId + "/tracks");
+            _cache.Remove(playlistRequest.UserId + "/playlists");
+
+            //get the tracks
+            var savedTracks = await _trackService.GetSavedTracks(playlistRequest);
+
+            var existingTracks = await _trackService.GetTracksFromPlaylist(new GetPlaylistTracksRequest() { Id = playlistRequest.Id, Auth = playlistRequest.Auth, UserId = playlistRequest.UserId });
+            //get the difference in tracks?
+            var existingUris = existingTracks.Select(e => e.Uri);
+            var newTracks = savedTracks.Where(s => !existingUris.Contains(s));
+            playlistRequest.TrackIds = newTracks.ToArray();
+            //add tracks to the playlist
+            var addTracksResponse = await _trackService.AddTracksToPlaylist(playlistRequest);
+            addTracksResponse.Title = playlistRequest.Name;
+            return addTracksResponse;
         }
 
         //"Deletes" a playlist actually unfollows it
