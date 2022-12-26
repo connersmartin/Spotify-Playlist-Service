@@ -122,24 +122,18 @@ namespace SpotListAPI.Services
         public async Task<List<PlaylistResponse>> GetPlaylist(PlaylistRequest playlistRequest)
         {
             var playlistList = new List<Playlist>();
-            var user = await _userService.GetUser(playlistRequest.Auth);
-            _cache.Remove(user + "/playlists");
 
-            if (!_cache.TryGetValue(user+"/playlists", out playlistList))
-            {
-                var playlists = new List<Playlist>();
-                var url = string.Format($"playlists/{playlistRequest.Id}");
+            var playlists = new List<Playlist>();
+            var url = string.Format($"playlists/{playlistRequest.Id}");
               
-                 var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
+            var getPlaylistsResponse = await _spotifyService.SpotifyApi(playlistRequest.Auth, url, "get");
 
-                    var getPlaylist = _helper.Mapper<Playlist>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
+            var getPlaylist = _helper.Mapper<Playlist>(await getPlaylistsResponse.Content.ReadAsByteArrayAsync());
 
-                    playlists.Add(getPlaylist);
-
-
+            playlists.Add(getPlaylist);
                
-                playlistList = playlists;
-            }
+            playlistList = playlists;
+            
 
             return PlaylistToPlaylistResponse(playlistList);
         }
@@ -150,7 +144,7 @@ namespace SpotListAPI.Services
         {
             var playlistList = new List<Playlist>();
             var user = await _userService.GetUser(playlistRequest.Auth);
-            _cache.Remove(user + "/playlists");
+            //_cache.Remove(user + "/playlists");
 
             if (!_cache.TryGetValue(user+"/playlists", out playlistList))
             {

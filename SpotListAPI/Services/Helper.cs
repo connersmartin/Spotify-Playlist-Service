@@ -13,7 +13,7 @@ namespace SpotListAPI.Services
         //General mapper
         public T Mapper<T>(byte[] json)
         {
-            return JsonSerializer.Deserialize<T>(json, null);
+            return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions());
         }
         public List<List<T>> ChunkBy<T>(List<T> source, int chunkSize)
         {
