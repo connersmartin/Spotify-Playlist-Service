@@ -15,36 +15,35 @@ namespace SpotListAPI.Services
         //API call to spotify
         public async Task<HttpResponseMessage> SpotifyApi(string auth, string url, string method, string param = "")
         {
-            try
-            {
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("Authorization", "Bearer "+ auth);
                     client.Timeout = new TimeSpan(1,0,0);
                     client.BaseAddress = new Uri(baseAddress);
                     var content = new StringContent(param);
+                    var response = new HttpResponseMessage();
                     
                     switch (method.ToLower())
                     {
                         case "get":
-                            return await client.GetAsync(baseAddress+url);
+                            response = await client.GetAsync(baseAddress+url);
+                            break;
                         case "post":
                             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            return await client.PostAsync(url, content);
+                            response = await client.PostAsync(url, content);
+                            break;
                         case "put":
                             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                            return await client.PutAsync(url, content);
+                            response = await client.PutAsync(url, content);
+                            break;
                         case "delete":
-                            return await client.DeleteAsync(baseAddress + url);
+                            response = await client.DeleteAsync(baseAddress + url);
+                            break;
                     }
-                }
-                return new HttpResponseMessage() { StatusCode = HttpStatusCode.NoContent };
-            }
-            catch (Exception ex)
-            {
-                return new HttpResponseMessage() { StatusCode = HttpStatusCode.InternalServerError, ReasonPhrase = ex.Message };
-            }
 
+                    response.EnsureSuccessStatusCode();
+                    return response;
+                }            
         }
     }
 }

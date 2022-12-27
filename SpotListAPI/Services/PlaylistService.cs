@@ -144,6 +144,10 @@ namespace SpotListAPI.Services
         {
             var playlistList = new List<Playlist>();
             var user = await _userService.GetUser(playlistRequest.Auth);
+            if (user == null)
+            {
+                throw new Exception("User not found");
+            }
             //_cache.Remove(user + "/playlists");
 
             if (!_cache.TryGetValue(user+"/playlists", out playlistList))

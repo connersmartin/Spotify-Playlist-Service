@@ -41,26 +41,19 @@ namespace SpotListAPI.Controllers
                 UpdateTracks = true,
                 Id = id
             };
-            try
+            if (id != null)
             {
-                if (id != null)
-                {
-                    var playlist = await _playlistService.GetPlaylist(request);
+                var playlist = await _playlistService.GetPlaylist(request);
 
-                    return playlist;
-                }
-                else
-                {
-                    var playlists = await _playlistService.GetPlaylists(request);
-
-                    return playlists;
-                }
+                return playlist;
             }
-            catch (Exception ex)
+            else
             {
+                var playlists = await _playlistService.GetPlaylists(request);
 
-                throw ex;
+                return playlists;
             }
+           
             
             //return id of playlist and playlist name/length
         }
